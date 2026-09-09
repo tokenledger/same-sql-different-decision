@@ -317,6 +317,76 @@ def aya_saturation() -> list[str]:
     return lines
 
 
+def canonical_operating_point() -> list[str]:
+    """Exact canonical thresholds, test AUROC gaps, and question-clustered risk CIs.
+
+    These are quoted in the paper's Section 4/5 text and in the full-data
+    appendix table, and previously existed in no results file."""
+    from xsql.metrics import auroc, risk_at_threshold
+
+    langs = ["en", "de", "es", "fr", "ja", "vi", "zh"]
+    lines = [
+        "## 5. Canonical operating point: thresholds, AUROC gaps, risk intervals",
+        "",
+        "Threshold fit on calibration-split English at the 10% target (canonical split), "
+        "then applied to every language on the test split; the full-corpus block refits "
+        "the threshold on all 6,000 English scores (descriptive, in-sample). Risk CIs are "
+        "question-clustered percentile bootstraps (4,000 resamples).",
+        "",
+    ]
+    for stem, pretty in [("big-llama8b", "Llama-3.1-8B"), ("big-qwen7b", "Qwen2.5-7B")]:
+        rows = [json.loads(l) for l in (BIG / f"scores_{stem}.jsonl").open()]
+        by = defaultdict(dict)
+        for r in rows:
+            by[r["lang"]][r["candidate_id"]] = r
+        ids = sorted(by["en"])
+        labels = np.array([by["en"][c]["correct"] for c in ids], dtype=float)
+        dbs = np.array([by["en"][c]["db_id"] for c in ids])
+        items = np.array([c.split("#")[0] for c in ids])
+        conf = {l: np.array([by[l][c]["confidence"] for c in ids]) for l in langs}
+        uniq = sorted(set(dbs))
+        perm = np.random.default_rng(SEED).permutation(uniq)
+        cal = set(perm[: len(uniq) // 2])
+        m = np.array([d in cal for d in dbs])
+        t = ~m
+
+        def boot_risk(lab, sc, thr, it, n=4000, seed=SEED):
+            rng = np.random.default_rng(seed)
+            u = np.unique(it)
+            idx = {q: np.flatnonzero(it == q) for q in u}
+            out = []
+            for _ in range(n):
+                ii = np.concatenate([idx[q] for q in rng.choice(u, len(u), replace=True)])
+                out.append(risk_at_threshold(lab[ii], sc[ii], thr)[0])
+            return np.percentile(out, [2.5, 97.5])
+
+        thr = threshold_at_risk(labels[m], conf["en"][m], 0.10)
+        thr_full = threshold_at_risk(labels, conf["en"], 0.10)
+        a_en = auroc(labels[t], conf["en"][t])
+        lines += [
+            f"### {pretty}",
+            "",
+            f"- canonical threshold: {thr!r}; full-corpus threshold: {thr_full!r}",
+            f"- English scores > 0.99: {(conf['en'] > 0.99).mean():.1%} (all), "
+            f"{(conf['en'][m] > 0.99).mean():.1%} (calibration split)",
+            "",
+            "| lang | test AUROC | gap vs en | test risk [95% CI] | test cov | full risk [95% CI] | full cov |",
+            "|---|---|---|---|---|---|---|",
+        ]
+        for l in langs:
+            a = auroc(labels[t], conf[l][t])
+            r, c = risk_at_threshold(labels[t], conf[l][t], thr)
+            lo, hi = boot_risk(labels[t], conf[l][t], thr, items[t])
+            rf, cf = risk_at_threshold(labels, conf[l], thr_full)
+            lof, hif = boot_risk(labels, conf[l], thr_full, items)
+            lines.append(
+                f"| {l} | {a:.4f} | {a_en - a:+.4f} | {r:.3f} [{lo:.3f}, {hi:.3f}] | {c:.3f} | "
+                f"{rf:.3f} [{lof:.3f}, {hif:.3f}] | {cf:.3f} |"
+            )
+        lines.append("")
+    return lines
+
+
 def main() -> None:
     lines = [
         "# Final numbers: reproducing published statistics that existed in no script",
@@ -335,6 +405,7 @@ def main() -> None:
     lines += quantile_spread_over_seeds()
     lines += cross_model_flips()
     lines += aya_saturation()
+    lines += canonical_operating_point()
 
     text = "\n".join(lines) + "\n"
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)

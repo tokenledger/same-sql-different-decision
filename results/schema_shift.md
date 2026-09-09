@@ -6,103 +6,103 @@ Databases are split 50/50 (by db_id, not by question) into a FIT half (used to f
 
 163 databases split 50/50 by database (seed=0): 81 FIT / 82 TEST. FIT: 599 questions, 2995 candidates (x7 langs each scored). TEST: 601 questions, 3005 candidates.
 
-Threshold fit on English/FIT to hit 10% risk: 0.8355
+Threshold fit on English/FIT to hit 10% risk: 0.7549
 
-Baseline (fit population, English): risk 0.100, coverage 0.475.
+Baseline (fit population, English): risk 0.100, coverage 0.579.
 
 ### (a) language-only shift -- FIT databases, other languages
 Same population the threshold was fit on; only the language changes. Paired bootstrap over questions (95% CI on the coverage gap vs FIT/English).
 
 | lang | risk | coverage | gap vs FIT/en | 95% CI | significant |
 |---|---|---|---|---|---|
-| en | 0.100 | 0.475 | -- | -- | -- |
-| de | 0.115 | 0.518 | +0.043 | [+0.018, +0.068] | **yes** |
-| es | 0.125 | 0.554 | +0.079 | [+0.054, +0.105] | **yes** |
-| fr | 0.097 | 0.368 | -0.107 | [-0.130, -0.085] | **yes** |
-| ja | 0.128 | 0.503 | +0.028 | [+0.001, +0.053] | **yes** |
-| vi | 0.126 | 0.502 | +0.027 | [+0.001, +0.054] | **yes** |
-| zh | 0.116 | 0.517 | +0.042 | [+0.014, +0.068] | **yes** |
+| en | 0.100 | 0.579 | -- | -- | -- |
+| de | 0.111 | 0.620 | +0.041 | [+0.018, +0.065] | **yes** |
+| es | 0.106 | 0.650 | +0.071 | [+0.045, +0.098] | **yes** |
+| fr | 0.078 | 0.458 | -0.122 | [-0.148, -0.096] | **yes** |
+| ja | 0.105 | 0.616 | +0.037 | [+0.010, +0.063] | **yes** |
+| vi | 0.114 | 0.611 | +0.031 | [+0.004, +0.060] | **yes** |
+| zh | 0.101 | 0.610 | +0.030 | [+0.004, +0.057] | **yes** |
 
 ### (b) language+schema shift -- held-out databases, other languages
 Threshold still fit on FIT/English; evaluated on TEST databases in each other language. Two-sample bootstrap by DATABASE (gap vs FIT/English).
 
 | lang | risk | coverage | gap vs FIT/en | 95% CI | significant |
 |---|---|---|---|---|---|
-| en | 0.094 | 0.450 | -0.024 | [-0.086, +0.040] | no (=English, see (c)) |
-| de | 0.103 | 0.467 | -0.009 | [-0.075, +0.061] | no (negligible) |
-| es | 0.108 | 0.519 | +0.044 | [-0.023, +0.108] | no |
-| fr | 0.076 | 0.332 | -0.143 | [-0.204, -0.082] | **yes** |
-| ja | 0.107 | 0.440 | -0.036 | [-0.097, +0.029] | no |
-| vi | 0.115 | 0.476 | +0.000 | [-0.064, +0.064] | no (negligible) |
-| zh | 0.106 | 0.475 | -0.001 | [-0.062, +0.062] | no (negligible) |
+| en | 0.078 | 0.544 | -0.035 | [-0.096, +0.025] | no (=English, see (c)) |
+| de | 0.102 | 0.579 | -0.001 | [-0.061, +0.062] | no (negligible) |
+| es | 0.096 | 0.646 | +0.066 | [+0.002, +0.126] | **yes** |
+| fr | 0.068 | 0.423 | -0.157 | [-0.218, -0.093] | **yes** |
+| ja | 0.085 | 0.566 | -0.014 | [-0.077, +0.052] | no (negligible) |
+| vi | 0.107 | 0.595 | +0.016 | [-0.047, +0.080] | no (negligible) |
+| zh | 0.092 | 0.565 | -0.015 | [-0.076, +0.047] | no (negligible) |
 
 ### (c) reference: schema shift alone -- held-out databases, English
 Same threshold, same TEST databases, but the pivot language -- isolates how much of (b) is schema shift vs added language shift. (Row is a duplicate of the `en` row in (b), repeated for readability.)
 
-English/TEST: risk 0.094, coverage 0.450, gap vs FIT/en -0.025 [-0.085, +0.039] no.
+English/TEST: risk 0.078, coverage 0.544, gap vs FIT/en -0.035 [-0.093, +0.026] no.
 
 ### AUROC on FIT vs held-out (TEST) databases
 Two-sample bootstrap by DATABASE.
 
 | lang | AUROC (FIT) | AUROC (TEST) | gap FIT-TEST | 95% CI | significant |
 |---|---|---|---|---|---|
-| en | 0.660 | 0.689 | -0.030 | [-0.095, +0.039] | no |
-| de | 0.633 | 0.680 | -0.047 | [-0.122, +0.036] | no |
-| es | 0.645 | 0.694 | -0.047 | [-0.121, +0.021] | no |
-| fr | 0.655 | 0.684 | -0.028 | [-0.104, +0.044] | no |
-| ja | 0.632 | 0.665 | -0.034 | [-0.106, +0.044] | no |
-| vi | 0.645 | 0.658 | -0.014 | [-0.081, +0.053] | no (negligible) |
-| zh | 0.646 | 0.688 | -0.043 | [-0.111, +0.025] | no |
+| en | 0.686 | 0.735 | -0.050 | [-0.115, +0.016] | no |
+| de | 0.652 | 0.710 | -0.057 | [-0.135, +0.020] | no |
+| es | 0.673 | 0.732 | -0.057 | [-0.123, +0.010] | no |
+| fr | 0.681 | 0.714 | -0.033 | [-0.105, +0.035] | no |
+| ja | 0.661 | 0.704 | -0.043 | [-0.111, +0.030] | no |
+| vi | 0.670 | 0.687 | -0.018 | [-0.084, +0.046] | no (negligible) |
+| zh | 0.680 | 0.726 | -0.046 | [-0.110, +0.016] | no |
 
 ## big-qwen7b
 
 Threshold fit on English/FIT to hit 10% risk: 1.0000
 
-Baseline (fit population, English): risk 0.099, coverage 0.341.
+Baseline (fit population, English): risk 0.098, coverage 0.643.
 
 ### (a) language-only shift -- FIT databases, other languages
 Same population the threshold was fit on; only the language changes. Paired bootstrap over questions (95% CI on the coverage gap vs FIT/English).
 
 | lang | risk | coverage | gap vs FIT/en | 95% CI | significant |
 |---|---|---|---|---|---|
-| en | 0.099 | 0.341 | -- | -- | -- |
-| de | 0.101 | 0.112 | -0.229 | [-0.264, -0.196] | **yes** |
-| es | 0.087 | 0.173 | -0.167 | [-0.196, -0.140] | **yes** |
-| fr | 0.078 | 0.151 | -0.190 | [-0.224, -0.158] | **yes** |
-| ja | 0.087 | 0.233 | -0.108 | [-0.141, -0.076] | **yes** |
-| vi | 0.155 | 0.132 | -0.209 | [-0.246, -0.173] | **yes** |
-| zh | 0.110 | 0.297 | -0.043 | [-0.076, -0.010] | **yes** |
+| en | 0.098 | 0.643 | -- | -- | -- |
+| de | 0.098 | 0.536 | -0.107 | [-0.139, -0.073] | **yes** |
+| es | 0.095 | 0.560 | -0.083 | [-0.116, -0.052] | **yes** |
+| fr | 0.097 | 0.595 | -0.048 | [-0.077, -0.018] | **yes** |
+| ja | 0.092 | 0.606 | -0.037 | [-0.074, -0.004] | **yes** |
+| vi | 0.097 | 0.503 | -0.140 | [-0.176, -0.106] | **yes** |
+| zh | 0.094 | 0.549 | -0.094 | [-0.128, -0.061] | **yes** |
 
 ### (b) language+schema shift -- held-out databases, other languages
 Threshold still fit on FIT/English; evaluated on TEST databases in each other language. Two-sample bootstrap by DATABASE (gap vs FIT/English).
 
 | lang | risk | coverage | gap vs FIT/en | 95% CI | significant |
 |---|---|---|---|---|---|
-| en | 0.089 | 0.304 | -0.037 | [-0.097, +0.023] | no (=English, see (c)) |
-| de | 0.082 | 0.098 | -0.242 | [-0.291, -0.195] | **yes** |
-| es | 0.100 | 0.174 | -0.166 | [-0.217, -0.117] | **yes** |
-| fr | 0.074 | 0.135 | -0.206 | [-0.256, -0.157] | **yes** |
-| ja | 0.104 | 0.199 | -0.142 | [-0.196, -0.088] | **yes** |
-| vi | 0.106 | 0.103 | -0.238 | [-0.285, -0.193] | **yes** |
-| zh | 0.114 | 0.260 | -0.081 | [-0.136, -0.028] | **yes** |
+| en | 0.085 | 0.610 | -0.033 | [-0.095, +0.028] | no (=English, see (c)) |
+| de | 0.082 | 0.499 | -0.144 | [-0.209, -0.076] | **yes** |
+| es | 0.074 | 0.537 | -0.106 | [-0.172, -0.038] | **yes** |
+| fr | 0.079 | 0.529 | -0.114 | [-0.183, -0.046] | **yes** |
+| ja | 0.094 | 0.554 | -0.089 | [-0.158, -0.018] | **yes** |
+| vi | 0.087 | 0.462 | -0.182 | [-0.245, -0.117] | **yes** |
+| zh | 0.089 | 0.564 | -0.080 | [-0.145, -0.015] | **yes** |
 
 ### (c) reference: schema shift alone -- held-out databases, English
 Same threshold, same TEST databases, but the pivot language -- isolates how much of (b) is schema shift vs added language shift. (Row is a duplicate of the `en` row in (b), repeated for readability.)
 
-English/TEST: risk 0.089, coverage 0.304, gap vs FIT/en -0.036 [-0.095, +0.020] no.
+English/TEST: risk 0.085, coverage 0.610, gap vs FIT/en -0.033 [-0.092, +0.025] no.
 
 ### AUROC on FIT vs held-out (TEST) databases
 Two-sample bootstrap by DATABASE.
 
 | lang | AUROC (FIT) | AUROC (TEST) | gap FIT-TEST | 95% CI | significant |
 |---|---|---|---|---|---|
-| en | 0.657 | 0.697 | -0.041 | [-0.108, +0.032] | no |
-| de | 0.634 | 0.666 | -0.032 | [-0.106, +0.043] | no |
-| es | 0.652 | 0.693 | -0.040 | [-0.110, +0.035] | no |
-| fr | 0.653 | 0.685 | -0.032 | [-0.103, +0.036] | no |
-| ja | 0.662 | 0.650 | +0.012 | [-0.061, +0.089] | no (negligible) |
-| vi | 0.631 | 0.675 | -0.045 | [-0.115, +0.025] | no |
-| zh | 0.651 | 0.661 | -0.010 | [-0.084, +0.064] | no (negligible) |
+| en | 0.696 | 0.754 | -0.059 | [-0.125, +0.009] | no |
+| de | 0.672 | 0.716 | -0.044 | [-0.117, +0.033] | no |
+| es | 0.685 | 0.743 | -0.058 | [-0.127, +0.013] | no |
+| fr | 0.679 | 0.729 | -0.049 | [-0.120, +0.019] | no |
+| ja | 0.690 | 0.701 | -0.011 | [-0.086, +0.064] | no (negligible) |
+| vi | 0.664 | 0.706 | -0.043 | [-0.124, +0.034] | no |
+| zh | 0.689 | 0.717 | -0.029 | [-0.102, +0.045] | no |
 
 ## Reading
 

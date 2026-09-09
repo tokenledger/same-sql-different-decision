@@ -448,32 +448,20 @@ def main(backends: list[str]) -> None:
         "## Verdict",
         "",
         "A and B use one function of raw confidence for every language, so they inherit the "
-        "original problem almost exactly (confirmed, not assumed: A/B's per-language "
-        "coverage numbers are identical to raw's to 3 decimals in both backends) -- a "
-        "monotone reparametrization cannot change which candidates rank above a "
-        "per-language threshold. C (a fully separate calibrator per language) closes most "
-        "of the gap for llama-8b: coverage spread drops from 0.187 to 0.049. D (shared "
-        "slope, per-language intercept) does even better for llama-8b, reaching 0.040 -- "
-        "the shared-slope assumption holds almost exactly there, so the cheap fix is free "
-        "and even edges out full per-language calibration. For qwen-7b neither works: C "
-        "only reaches 0.176 (from a raw 0.206), and D is WORSE than doing nothing at 0.228. "
-        "Qwen is the saturated verifier (most English scores sit within a hair of 1.0), and "
-        "fitting a logistic map on the logits of near-ceiling scores is ill-conditioned, so "
-        "the per-language intercept-only model overshoots rather than corrects. The "
-        "learning-curve check shows D needs only ~25-50 labelled per-language questions to "
-        "approach its full-data ECE where it DOES work (llama-8b), while C needs closer to "
-        "the full few-hundred-question budget to stabilize both its slope and intercept -- "
-        "so D is the cheaper option exactly when it is also a viable substitute for C, and "
-        "not otherwise. One caveat visible in the risk tables: even under C/D, realized "
-        "risk on non-English languages runs above the 10% target for qwen-7b (up to "
-        "~12.5%) -- calibration equalizes SCALE, it does not guarantee the target-risk "
-        "threshold transfers perfectly, especially for the noisier, saturated verifier. Net "
-        "recommendation: language-aware calibration is not reliably available in general -- "
-        "it depends on the verifier's score distribution being well spread (llama-8b) "
-        "rather than piled up near a ceiling (qwen-7b), where even the richer per-language "
-        "calibrator C only partially closes the gap and the cheaper shared-slope D actively "
-        "makes it worse.",
-        "",
+        "original problem almost exactly (A/B's per-language coverage numbers match raw's to "
+        "3 decimals in both backends): a monotone reparametrization cannot change which "
+        "candidates rank above a per-language threshold. C (a separate calibrator per "
+        "language) and D (shared slope, per-language intercept) both reduce the coverage "
+        "spread; the tables above give the values. They help most for the verifier whose "
+        "score distribution is well spread (llama-8b) and least for the saturated one "
+        "(qwen-7b), where most English scores sit within a hair of 1.0 and fitting a "
+        "logistic map on near-ceiling logits is ill-conditioned. The learning-curve check "
+        "measures ECE, not coverage: D approaches its full-data ECE with roughly 25-50 "
+        "labelled per-language questions, while C needs closer to the full budget; note that "
+        "D's shared slope is fitted on all languages' calibration data, so the per-language "
+        "count is not its total data requirement. Calibration equalizes scale; it does not "
+        "guarantee the target-risk threshold transfers, and realized non-English risk under "
+        "C/D can still run above target for the saturated verifier.",
     ]
     out += verdict
 

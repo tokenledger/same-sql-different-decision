@@ -14,213 +14,213 @@ are picked up automatically once they exist, with no code changes needed.
 
 ## Llama-3.1-8B (established, full 1200)
 
-n=6000 candidates across 163 databases, 4894 correct / 1106 incorrect (81.6% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=6000 candidates across 163 databases, 5053 correct / 947 incorrect (84.2% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.6750
+**English AUROC:** 0.7107
   **Saturation fraction (within 1e-6 of 0 or 1):** 0.0% -- not saturated
 
-Threshold 0.8355 (fit on English, 81/163 databases, target risk 10%). Held-out test split: 3005 candidates, 2436 correct / 569 incorrect.
+Threshold 0.7549 (fit on English, 81/163 databases, target risk 10%). Held-out test split: 3005 candidates, 2519 correct / 486 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 12.1% | 42/569=7.4% [5.4%, 9.8%] | 133/2436=5.5% | 0.767 | 0.467 | 0.103 |
-| es | 13.7% | 54/569=9.5% [7.2%, 12.2%] | 90/2436=3.7% | 0.752 | 0.519 | 0.108 |
-| fr | 13.7% | 0/569, 95% upper bound 0.6% | 332/2436=13.6% | 0.702 | 0.332 | 0.076 |
-| ja | 16.5% | 43/569=7.6% [5.5%, 10.0%] | 236/2436=9.7% | 0.687 | 0.440 | 0.107 |
-| vi | 14.4% | 68/569=12.0% [9.4%, 14.9%] | 147/2436=6.0% | 0.731 | 0.476 | 0.115 |
-| zh | 14.8% | 52/569=9.1% [6.9%, 11.8%] | 157/2436=6.4% | 0.725 | 0.475 | 0.106 |
+| de | 13.9% | 62/486=12.8% [9.9%, 16.1%] | 145/2519=5.8% | 0.780 | 0.579 | 0.102 |
+| es | 14.9% | 64/486=13.2% [10.3%, 16.5%] | 66/2519=2.6% | 0.778 | 0.646 | 0.096 |
+| fr | 14.6% | 8/486=1.6% [0.7%, 3.2%] | 352/2519=14.0% | 0.737 | 0.423 | 0.068 |
+| ja | 19.5% | 49/486=10.1% [7.6%, 13.1%] | 227/2519=9.0% | 0.702 | 0.566 | 0.085 |
+| vi | 17.3% | 82/486=16.9% [13.6%, 20.5%] | 164/2519=6.5% | 0.736 | 0.595 | 0.107 |
+| zh | 15.9% | 57/486=11.7% [9.0%, 14.9%] | 179/2519=7.1% | 0.749 | 0.565 | 0.092 |
 
-**Mean flip rate across 6 non-English languages: 14.2% (database-clustered 95% CI [12.2%, 16.3%]).**
-**Coverage spread across languages (incl. English): 0.187.**
+**Mean flip rate across 6 non-English languages: 16.0% (database-clustered 95% CI [14.2%, 18.0%]).**
+**Coverage spread across languages (incl. English): 0.223.**
 
 ## Qwen2.5-7B (established, full 1200)
 
-n=6000 candidates across 163 databases, 4894 correct / 1106 incorrect (81.6% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=6000 candidates across 163 databases, 5053 correct / 947 incorrect (84.2% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.6770
+**English AUROC:** 0.7251
   **Saturation fraction (within 1e-6 of 0 or 1):** 60.8% -- majority saturated, treat isotonic-style transport with caution
 
-Threshold 1.0000 (fit on English, 81/163 databases, target risk 10%). Held-out test split: 3005 candidates, 2436 correct / 569 incorrect.
+Threshold 1.0000 (fit on English, 81/163 databases, target risk 10%). Held-out test split: 3005 candidates, 2519 correct / 486 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 22.3% | 5/569=0.9% [0.3%, 2.0%] | 583/2436=23.9% | 0.286 | 0.098 | 0.082 |
-| es | 18.2% | 17/569=3.0% [1.7%, 4.7%] | 423/2436=17.4% | 0.449 | 0.174 | 0.100 |
-| fr | 19.1% | 10/569=1.8% [0.8%, 3.2%] | 481/2436=19.7% | 0.393 | 0.135 | 0.074 |
-| ja | 18.4% | 27/569=4.7% [3.2%, 6.8%] | 389/2436=16.0% | 0.464 | 0.199 | 0.104 |
-| vi | 22.7% | 2/569=0.4% [0.0%, 1.3%] | 593/2436=24.3% | 0.284 | 0.103 | 0.106 |
-| zh | 17.5% | 35/569=6.2% [4.3%, 8.5%] | 303/2436=12.4% | 0.526 | 0.260 | 0.114 |
+| de | 21.7% | 24/486=4.9% [3.2%, 7.3%] | 436/2519=17.3% | 0.673 | 0.499 | 0.082 |
+| es | 17.4% | 20/486=4.1% [2.5%, 6.3%] | 314/2519=12.5% | 0.737 | 0.537 | 0.074 |
+| fr | 20.1% | 27/486=5.6% [3.7%, 8.0%] | 366/2519=14.5% | 0.700 | 0.529 | 0.079 |
+| ja | 21.9% | 43/486=8.8% [6.5%, 11.7%] | 371/2519=14.7% | 0.683 | 0.554 | 0.094 |
+| vi | 27.2% | 39/486=8.0% [5.8%, 10.8%] | 557/2519=22.1% | 0.595 | 0.462 | 0.087 |
+| zh | 21.5% | 51/486=10.5% [7.9%, 13.6%] | 336/2519=13.3% | 0.690 | 0.564 | 0.089 |
 
-**Mean flip rate across 6 non-English languages: 19.7% (database-clustered 95% CI [17.0%, 22.4%]).**
-**Coverage spread across languages (incl. English): 0.206.**
+**Mean flip rate across 6 non-English languages: 21.6% (database-clustered 95% CI [19.6%, 23.7%]).**
+**Coverage spread across languages (incl. English): 0.148.**
 
 ## llama8b (correctincorrect, 300-item subset)
 
-n=1500 candidates across 39 databases, 1191 correct / 309 incorrect (79.4% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=1500 candidates across 39 databases, 1232 correct / 268 incorrect (82.1% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.6507
+**English AUROC:** 0.6744
   **Saturation fraction (within 1e-6 of 0 or 1):** 0.0% -- not saturated
 
-Threshold 0.9235 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 659 correct / 161 incorrect.
+Threshold 0.8923 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 688 correct / 132 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 13.5% | 15/161=9.3% [5.3%, 14.9%] | 16/659=2.4% | 0.706 | 0.440 | 0.139 |
-| es | 11.1% | 9/161=5.6% [2.6%, 10.3%] | 18/659=2.7% | 0.739 | 0.394 | 0.115 |
-| fr | 8.8% | 5/161=3.1% [1.0%, 7.1%] | 20/659=3.0% | 0.783 | 0.378 | 0.123 |
-| ja | 16.5% | 14/161=8.7% [4.8%, 14.2%] | 30/659=4.6% | 0.648 | 0.426 | 0.129 |
-| vi | 14.0% | 13/161=8.1% [4.4%, 13.4%] | 51/659=7.7% | 0.662 | 0.345 | 0.148 |
-| zh | 14.5% | 18/161=11.2% [6.8%, 17.1%] | 40/659=6.1% | 0.661 | 0.367 | 0.143 |
+| de | 12.1% | 14/132=10.6% [5.9%, 17.2%] | 12/688=1.7% | 0.764 | 0.494 | 0.111 |
+| es | 9.3% | 10/132=7.6% [3.7%, 13.5%] | 17/688=2.5% | 0.806 | 0.454 | 0.110 |
+| fr | 10.1% | 9/132=6.8% [3.2%, 12.5%] | 20/688=2.9% | 0.790 | 0.455 | 0.107 |
+| ja | 15.5% | 17/132=12.9% [7.7%, 19.8%] | 35/688=5.1% | 0.700 | 0.472 | 0.124 |
+| vi | 16.8% | 27/132=20.5% [13.9%, 28.3%] | 56/688=8.1% | 0.661 | 0.417 | 0.149 |
+| zh | 14.4% | 14/132=10.6% [5.9%, 17.2%] | 40/688=5.8% | 0.707 | 0.432 | 0.107 |
 
-**Mean flip rate across 6 non-English languages: 13.1% (database-clustered 95% CI [9.3%, 16.9%]).**
-**Coverage spread across languages (incl. English): 0.096.**
+**Mean flip rate across 6 non-English languages: 13.0% (database-clustered 95% CI [9.5%, 16.9%]).**
+**Coverage spread across languages (incl. English): 0.087.**
 
 ## qwen7b (correctincorrect, 300-item subset)
 
-n=1500 candidates across 39 databases, 1191 correct / 309 incorrect (79.4% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=1500 candidates across 39 databases, 1232 correct / 268 incorrect (82.1% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.6777
+**English AUROC:** 0.7341
   **Saturation fraction (within 1e-6 of 0 or 1):** 2.4% -- not saturated
 
-Threshold 0.9999 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 659 correct / 161 incorrect.
+Threshold 0.9998 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 688 correct / 132 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 22.3% | 2/161=1.2% [0.2%, 4.4%] | 144/659=21.9% | 0.610 | 0.368 | 0.152 |
-| es | 19.4% | 12/161=7.5% [3.9%, 12.7%] | 96/659=14.6% | 0.683 | 0.476 | 0.164 |
-| fr | 17.1% | 9/161=5.6% [2.6%, 10.3%] | 84/659=12.7% | 0.718 | 0.487 | 0.158 |
-| ja | 28.0% | 8/161=5.0% [2.2%, 9.6%] | 177/659=26.9% | 0.517 | 0.328 | 0.167 |
-| vi | 33.5% | 5/161=3.1% [1.0%, 7.1%] | 207/659=31.4% | 0.419 | 0.266 | 0.110 |
-| zh | 32.0% | 10/161=6.2% [3.0%, 11.1%] | 205/659=31.1% | 0.456 | 0.304 | 0.197 |
+| de | 18.9% | 6/132=4.5% [1.7%, 9.6%] | 107/688=15.6% | 0.727 | 0.551 | 0.133 |
+| es | 20.9% | 13/132=9.8% [5.3%, 16.3%] | 93/688=13.5% | 0.712 | 0.595 | 0.129 |
+| fr | 18.8% | 4/132=3.0% [0.8%, 7.6%] | 85/688=12.4% | 0.736 | 0.591 | 0.109 |
+| ja | 27.2% | 4/132=3.0% [0.8%, 7.6%] | 155/688=22.5% | 0.607 | 0.468 | 0.099 |
+| vi | 30.6% | 9/132=6.8% [3.2%, 12.5%] | 178/688=25.9% | 0.563 | 0.449 | 0.120 |
+| zh | 33.7% | 0/132, 95% upper bound 2.8% | 210/688=30.5% | 0.511 | 0.394 | 0.099 |
 
-**Mean flip rate across 6 non-English languages: 25.4% (database-clustered 95% CI [21.5%, 29.9%]).**
-**Coverage spread across languages (incl. English): 0.287.**
+**Mean flip rate across 6 non-English languages: 25.0% (database-clustered 95% CI [20.6%, 29.4%]).**
+**Coverage spread across languages (incl. English): 0.251.**
 
 ## aya-expanse-8b (yesno, 300-item subset)
 
-n=1500 candidates across 39 databases, 1191 correct / 309 incorrect (79.4% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=1500 candidates across 39 databases, 1232 correct / 268 incorrect (82.1% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.5998
+**English AUROC:** 0.6281
   **Saturation fraction (within 1e-6 of 0 or 1):** 72.5% -- majority saturated, treat isotonic-style transport with caution
 
-Threshold 1.0000 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 659 correct / 161 incorrect.
+Threshold 1.0000 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 688 correct / 132 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 7.8% | 13/161=8.1% [4.4%, 13.4%] | 16/659=2.4% | 0.546 | 0.149 | 0.156 |
-| es | 3.7% | 3/161=1.9% [0.4%, 5.3%] | 6/659=0.9% | 0.748 | 0.137 | 0.098 |
-| fr | 7.9% | 2/161=1.2% [0.2%, 4.4%] | 9/659=1.4% | 0.561 | 0.165 | 0.052 |
-| ja | 8.2% | 0/161, 95% upper bound 2.3% | 50/659=7.6% | 0.391 | 0.070 | 0.105 |
-| vi | 8.5% | 0/161, 95% upper bound 2.3% | 58/659=8.8% | 0.300 | 0.041 | 0.029 |
-| zh | 7.4% | 4/161=2.5% [0.7%, 6.2%] | 39/659=5.9% | 0.465 | 0.087 | 0.127 |
+| de | 10.6% | 18/132=13.6% [8.3%, 20.7%] | 23/688=3.3% | 0.606 | 0.241 | 0.121 |
+| es | 8.9% | 6/132=4.5% [1.7%, 9.6%] | 28/688=4.1% | 0.635 | 0.207 | 0.059 |
+| fr | 10.5% | 6/132=4.5% [1.7%, 9.6%] | 13/688=1.9% | 0.623 | 0.260 | 0.047 |
+| ja | 12.4% | 1/132=0.8% [0.0%, 4.1%] | 88/688=12.8% | 0.396 | 0.096 | 0.063 |
+| vi | 11.6% | 0/132, 95% upper bound 2.8% | 85/688=12.4% | 0.421 | 0.093 | 0.039 |
+| zh | 11.5% | 9/132=6.8% [3.2%, 12.5%] | 58/688=8.4% | 0.513 | 0.165 | 0.111 |
 
-**Mean flip rate across 6 non-English languages: 7.3% (database-clustered 95% CI [3.9%, 11.0%]).**
-**Coverage spread across languages (incl. English): 0.123.**
+**Mean flip rate across 6 non-English languages: 10.9% (database-clustered 95% CI [7.2%, 15.0%]).**
+**Coverage spread across languages (incl. English): 0.167.**
 
 ## llama8b (yesno, 300-item subset)
 
-n=1500 candidates across 39 databases, 1191 correct / 309 incorrect (79.4% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=1500 candidates across 39 databases, 1232 correct / 268 incorrect (82.1% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.6444
+**English AUROC:** 0.6668
   **Saturation fraction (within 1e-6 of 0 or 1):** 0.0% -- not saturated
 
-Threshold 0.8808 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 659 correct / 161 incorrect.
+Threshold 0.8519 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 688 correct / 132 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 10.4% | 9/161=5.6% [2.6%, 10.3%] | 24/659=3.6% | 0.738 | 0.367 | 0.133 |
-| es | 12.9% | 7/161=4.3% [1.8%, 8.8%] | 24/659=3.6% | 0.689 | 0.380 | 0.106 |
-| fr | 12.4% | 0/161, 95% upper bound 2.3% | 74/659=11.2% | 0.642 | 0.249 | 0.118 |
-| ja | 16.1% | 13/161=8.1% [4.4%, 13.4%] | 44/659=6.7% | 0.622 | 0.368 | 0.136 |
-| vi | 13.9% | 11/161=6.8% [3.5%, 11.9%] | 44/659=6.7% | 0.656 | 0.346 | 0.137 |
-| zh | 17.0% | 14/161=8.7% [4.8%, 14.2%] | 57/659=8.6% | 0.586 | 0.328 | 0.130 |
+| de | 13.0% | 14/132=10.6% [5.9%, 17.2%] | 16/688=2.3% | 0.715 | 0.438 | 0.123 |
+| es | 17.1% | 12/132=9.1% [4.8%, 15.3%] | 22/688=3.2% | 0.646 | 0.449 | 0.098 |
+| fr | 11.0% | 3/132=2.3% [0.5%, 6.5%] | 56/688=8.1% | 0.710 | 0.300 | 0.102 |
+| ja | 16.3% | 16/132=12.1% [7.1%, 18.9%] | 31/688=4.5% | 0.650 | 0.424 | 0.121 |
+| vi | 13.9% | 23/132=17.4% [11.4%, 25.0%] | 27/688=3.9% | 0.688 | 0.405 | 0.142 |
+| zh | 15.5% | 11/132=8.3% [4.2%, 14.4%] | 37/688=5.4% | 0.654 | 0.394 | 0.105 |
 
-**Mean flip rate across 6 non-English languages: 13.8% (database-clustered 95% CI [10.4%, 17.0%]).**
-**Coverage spread across languages (incl. English): 0.132.**
+**Mean flip rate across 6 non-English languages: 14.5% (database-clustered 95% CI [10.3%, 18.6%]).**
+**Coverage spread across languages (incl. English): 0.149.**
 
 ## qwen3-30ba3b-moe-bf16 (yesno, 300-item subset)
 
-n=1500 candidates across 39 databases, 1191 correct / 309 incorrect (79.4% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=1500 candidates across 39 databases, 1232 correct / 268 incorrect (82.1% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.7282
+**English AUROC:** 0.7903
   **Saturation fraction (within 1e-6 of 0 or 1):** 46.0% -- not saturated
 
-Threshold 0.9998 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 659 correct / 161 incorrect.
+Threshold 0.9948 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 688 correct / 132 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 15.0% | 10/161=6.2% [3.0%, 11.1%] | 71/659=10.8% | 0.796 | 0.611 | 0.128 |
-| es | 15.5% | 8/161=5.0% [2.2%, 9.6%] | 78/659=11.8% | 0.789 | 0.601 | 0.128 |
-| fr | 12.7% | 2/161=1.2% [0.2%, 4.4%] | 54/659=8.2% | 0.828 | 0.637 | 0.113 |
-| ja | 16.1% | 1/161=0.6% [0.0%, 3.4%] | 80/659=12.1% | 0.780 | 0.595 | 0.109 |
-| vi | 22.6% | 1/161=0.6% [0.0%, 3.4%] | 136/659=20.6% | 0.693 | 0.535 | 0.132 |
-| zh | 15.4% | 2/161=1.2% [0.2%, 4.4%] | 89/659=13.5% | 0.790 | 0.602 | 0.140 |
+| de | 17.0% | 9/132=6.8% [3.2%, 12.5%] | 78/688=11.3% | 0.795 | 0.699 | 0.108 |
+| es | 13.9% | 7/132=5.3% [2.2%, 10.6%] | 67/688=9.7% | 0.829 | 0.702 | 0.109 |
+| fr | 12.7% | 2/132=1.5% [0.2%, 5.4%] | 48/688=7.0% | 0.844 | 0.712 | 0.082 |
+| ja | 15.6% | 2/132=1.5% [0.2%, 5.4%] | 62/688=9.0% | 0.809 | 0.690 | 0.072 |
+| vi | 22.1% | 3/132=2.3% [0.5%, 6.5%] | 120/688=17.4% | 0.731 | 0.635 | 0.098 |
+| zh | 15.6% | 5/132=3.8% [1.2%, 8.6%] | 84/688=12.2% | 0.807 | 0.673 | 0.107 |
 
-**Mean flip rate across 6 non-English languages: 16.2% (database-clustered 95% CI [13.7%, 19.1%]).**
-**Coverage spread across languages (incl. English): 0.174.**
+**Mean flip rate across 6 non-English languages: 16.1% (database-clustered 95% CI [12.7%, 20.2%]).**
+**Coverage spread across languages (incl. English): 0.152.**
 
 ## qwen3-4b-bf16 (yesno, 300-item subset)
 
-n=1500 candidates across 39 databases, 1191 correct / 309 incorrect (79.4% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=1500 candidates across 39 databases, 1232 correct / 268 incorrect (82.1% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.7131
+**English AUROC:** 0.7536
   **Saturation fraction (within 1e-6 of 0 or 1):** 61.5% -- majority saturated, treat isotonic-style transport with caution
 
-Threshold 1.0000 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 659 correct / 161 incorrect.
+Threshold 0.9526 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 688 correct / 132 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 19.5% | 24/161=14.9% [9.8%, 21.4%] | 78/659=11.8% | 0.696 | 0.541 | 0.160 |
-| es | 15.0% | 15/161=9.3% [5.3%, 14.9%] | 57/659=8.6% | 0.751 | 0.509 | 0.110 |
-| fr | 13.4% | 18/161=11.2% [6.8%, 17.1%] | 57/659=8.6% | 0.777 | 0.524 | 0.144 |
-| ja | 21.8% | 14/161=8.7% [4.8%, 14.2%] | 81/659=12.3% | 0.662 | 0.528 | 0.113 |
-| vi | 21.6% | 6/161=3.7% [1.4%, 7.9%] | 111/659=16.8% | 0.640 | 0.438 | 0.097 |
-| zh | 21.0% | 20/161=12.4% [7.8%, 18.5%] | 103/659=15.6% | 0.661 | 0.480 | 0.155 |
+| de | 12.1% | 14/132=10.6% [5.9%, 17.2%] | 36/688=5.2% | 0.845 | 0.726 | 0.111 |
+| es | 14.9% | 13/132=9.8% [5.3%, 16.3%] | 64/688=9.3% | 0.805 | 0.666 | 0.104 |
+| fr | 10.7% | 13/132=9.8% [5.3%, 16.3%] | 38/688=5.5% | 0.859 | 0.705 | 0.111 |
+| ja | 20.5% | 9/132=6.8% [3.2%, 12.5%] | 90/688=13.1% | 0.738 | 0.646 | 0.091 |
+| vi | 19.1% | 9/132=6.8% [3.2%, 12.5%] | 107/688=15.6% | 0.747 | 0.609 | 0.110 |
+| zh | 19.0% | 4/132=3.0% [0.8%, 7.6%] | 103/688=15.0% | 0.750 | 0.615 | 0.097 |
 
-**Mean flip rate across 6 non-English languages: 18.7% (database-clustered 95% CI [14.6%, 22.9%]).**
-**Coverage spread across languages (incl. English): 0.109.**
+**Mean flip rate across 6 non-English languages: 16.1% (database-clustered 95% CI [12.3%, 19.9%]).**
+**Coverage spread across languages (incl. English): 0.117.**
 
 ## qwen3-4b-nf4 (yesno, 300-item subset)
 
-n=1500 candidates across 39 databases, 1191 correct / 309 incorrect (79.4% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=1500 candidates across 39 databases, 1232 correct / 268 incorrect (82.1% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.7054
+**English AUROC:** 0.7464
   **Saturation fraction (within 1e-6 of 0 or 1):** 57.7% -- majority saturated, treat isotonic-style transport with caution
 
-Threshold 1.0000 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 659 correct / 161 incorrect.
+Threshold 0.9707 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 688 correct / 132 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 17.3% | 18/161=11.2% [6.8%, 17.1%] | 74/659=11.2% | 0.719 | 0.515 | 0.142 |
-| es | 14.3% | 11/161=6.8% [3.5%, 11.9%] | 83/659=12.6% | 0.753 | 0.470 | 0.145 |
-| fr | 12.3% | 16/161=9.9% [5.8%, 15.6%] | 55/659=8.3% | 0.792 | 0.518 | 0.144 |
-| ja | 24.4% | 6/161=3.7% [1.4%, 7.9%] | 128/659=19.4% | 0.599 | 0.429 | 0.108 |
-| vi | 22.7% | 6/161=3.7% [1.4%, 7.9%] | 138/659=20.9% | 0.615 | 0.407 | 0.138 |
-| zh | 18.5% | 9/161=5.6% [2.6%, 10.3%] | 100/659=15.2% | 0.687 | 0.454 | 0.126 |
+| de | 13.4% | 21/132=15.9% [10.1%, 23.3%] | 52/688=7.6% | 0.816 | 0.659 | 0.124 |
+| es | 11.1% | 11/132=8.3% [4.2%, 14.4%] | 63/688=9.2% | 0.839 | 0.599 | 0.108 |
+| fr | 12.6% | 15/132=11.4% [6.5%, 18.0%] | 57/688=8.3% | 0.823 | 0.628 | 0.111 |
+| ja | 18.9% | 11/132=8.3% [4.2%, 14.4%] | 91/688=13.2% | 0.741 | 0.604 | 0.103 |
+| vi | 20.7% | 4/132=3.0% [0.8%, 7.6%] | 121/688=17.6% | 0.710 | 0.556 | 0.103 |
+| zh | 17.3% | 3/132=2.3% [0.5%, 6.5%] | 96/688=14.0% | 0.754 | 0.568 | 0.086 |
 
-**Mean flip rate across 6 non-English languages: 18.3% (database-clustered 95% CI [14.5%, 22.1%]).**
-**Coverage spread across languages (incl. English): 0.137.**
+**Mean flip rate across 6 non-English languages: 15.7% (database-clustered 95% CI [12.1%, 19.4%]).**
+**Coverage spread across languages (incl. English): 0.110.**
 
 ## qwen7b (yesno, 300-item subset)
 
-n=1500 candidates across 39 databases, 1191 correct / 309 incorrect (79.4% correct). Languages present: en, de, es, fr, ja, vi, zh.
+n=1500 candidates across 39 databases, 1232 correct / 268 incorrect (82.1% correct). Languages present: en, de, es, fr, ja, vi, zh.
 
-**English AUROC:** 0.6610
+**English AUROC:** 0.7193
   **Saturation fraction (within 1e-6 of 0 or 1):** 59.0% -- majority saturated, treat isotonic-style transport with caution
 
-Threshold 1.0000 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 659 correct / 161 incorrect.
+Threshold 1.0000 (fit on English, 19/39 databases, target risk 10%). Held-out test split: 820 candidates, 688 correct / 132 incorrect.
 
 | lang | flip rate | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage | accepted risk |
 |---|---|---|---|---|---|---|
-| de | 15.7% | 4/161=2.5% [0.7%, 6.2%] | 106/659=16.1% | 0.104 | 0.029 | 0.167 |
-| es | 11.1% | 6/161=3.7% [1.4%, 7.9%] | 73/659=11.1% | 0.368 | 0.076 | 0.177 |
-| fr | 14.3% | 4/161=2.5% [0.7%, 6.2%] | 98/659=14.9% | 0.164 | 0.034 | 0.143 |
-| ja | 12.8% | 4/161=2.5% [0.7%, 6.2%] | 81/659=12.3% | 0.318 | 0.083 | 0.191 |
-| vi | 15.7% | 0/161, 95% upper bound 2.3% | 109/659=16.5% | 0.085 | 0.022 | 0.000 |
-| zh | 15.1% | 8/161=5.0% [2.2%, 9.6%] | 85/659=12.9% | 0.244 | 0.084 | 0.174 |
+| de | 23.3% | 9/132=6.8% [3.2%, 12.5%] | 137/688=19.9% | 0.604 | 0.404 | 0.130 |
+| es | 22.4% | 16/132=12.1% [7.1%, 18.9%] | 112/688=16.3% | 0.634 | 0.463 | 0.139 |
+| fr | 19.8% | 9/132=6.8% [3.2%, 12.5%] | 114/688=16.6% | 0.660 | 0.427 | 0.126 |
+| ja | 25.0% | 13/132=9.8% [5.3%, 16.3%] | 89/688=12.9% | 0.615 | 0.511 | 0.086 |
+| vi | 28.0% | 9/132=6.8% [3.2%, 12.5%] | 171/688=24.9% | 0.517 | 0.341 | 0.114 |
+| zh | 24.8% | 13/132=9.8% [5.3%, 16.3%] | 128/688=18.6% | 0.593 | 0.430 | 0.122 |
 
-**Mean flip rate across 6 non-English languages: 14.1% (database-clustered 95% CI [9.6%, 18.6%]).**
-**Coverage spread across languages (incl. English): 0.143.**
+**Mean flip rate across 6 non-English languages: 23.9% (database-clustered 95% CI [19.4%, 28.9%]).**
+**Coverage spread across languages (incl. English): 0.198.**
 
 # Pairwise comparisons: isolating architecture from precision
 
@@ -234,33 +234,33 @@ cannot show on their own.
 
 ## Pairwise: quantization-only (qwen3-4b, bf16 vs nf4, architecture fixed)
 
-Threshold 1.0000 fit on **qwen3-4b-bf16**'s English scores (19/39 databases, target risk 10%), applied UNCHANGED to both **qwen3-4b-bf16** and **qwen3-4b-nf4**. Held-out test split: 820 candidates (659 correct / 161 incorrect).
+Threshold 0.9526 fit on **qwen3-4b-bf16**'s English scores (19/39 databases, target risk 10%), applied UNCHANGED to both **qwen3-4b-bf16** and **qwen3-4b-nf4**. Held-out test split: 820 candidates (688 correct / 132 incorrect).
 
 | lang | flip rate (A vs B) | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage A | coverage B |
 |---|---|---|---|---|---|---|
-| en | 7.0% | 10/161=6.2% [3.0%, 11.1%] | 17/659=2.6% | 0.881 | 0.546 | 0.550 |
-| de | 9.9% | 3/161=1.9% [0.4%, 5.3%] | 28/659=4.2% | 0.832 | 0.541 | 0.538 |
-| es | 6.5% | 12/161=7.5% [3.9%, 12.7%] | 35/659=5.3% | 0.878 | 0.509 | 0.483 |
-| fr | 6.2% | 7/161=4.3% [1.8%, 8.8%] | 16/659=2.4% | 0.890 | 0.524 | 0.540 |
-| ja | 12.6% | 2/161=1.2% [0.2%, 4.4%] | 77/659=11.7% | 0.769 | 0.528 | 0.434 |
-| vi | 10.0% | 16/161=9.9% [5.8%, 15.6%] | 45/659=6.8% | 0.790 | 0.438 | 0.416 |
-| zh | 8.8% | 2/161=1.2% [0.2%, 4.4%] | 27/659=4.1% | 0.830 | 0.480 | 0.466 |
+| en | 8.4% | 1/132=0.8% [0.0%, 4.1%] | 43/688=6.2% | 0.885 | 0.715 | 0.670 |
+| de | 9.0% | 2/132=1.5% [0.2%, 5.4%] | 60/688=8.7% | 0.878 | 0.726 | 0.667 |
+| es | 9.1% | 0/132, 95% upper bound 2.8% | 59/688=8.6% | 0.866 | 0.666 | 0.604 |
+| fr | 11.2% | 2/132=1.5% [0.2%, 5.4%] | 68/688=9.9% | 0.845 | 0.705 | 0.634 |
+| ja | 7.4% | 5/132=3.8% [1.2%, 8.6%] | 40/688=5.8% | 0.889 | 0.646 | 0.618 |
+| vi | 9.6% | 3/132=2.3% [0.5%, 6.5%] | 49/688=7.1% | 0.848 | 0.609 | 0.561 |
+| zh | 8.8% | 2/132=1.5% [0.2%, 5.4%] | 43/688=6.2% | 0.862 | 0.615 | 0.571 |
 
-**Mean flip rate across 7 languages (incl. English): 8.7% (database-clustered 95% CI [7.3%, 10.1%]).**
+**Mean flip rate across 7 languages (incl. English): 9.1% (database-clustered 95% CI [6.6%, 12.1%]).**
 
 ## Pairwise: dense vs sparse-MoE, precision-matched at bf16 (architecture varies, precision fixed)
 
-Threshold 1.0000 fit on **qwen3-4b-bf16**'s English scores (19/39 databases, target risk 10%), applied UNCHANGED to both **qwen3-4b-bf16** and **qwen3-30ba3b-moe-bf16**. Held-out test split: 820 candidates (659 correct / 161 incorrect).
+Threshold 0.9526 fit on **qwen3-4b-bf16**'s English scores (19/39 databases, target risk 10%), applied UNCHANGED to both **qwen3-4b-bf16** and **qwen3-30ba3b-moe-bf16**. Held-out test split: 820 candidates (688 correct / 132 incorrect).
 
 | lang | flip rate (A vs B) | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage A | coverage B |
 |---|---|---|---|---|---|---|
-| en | 21.7% | 15/161=9.3% [5.3%, 14.9%] | 102/659=15.5% | 0.645 | 0.546 | 0.459 |
-| de | 31.3% | 2/161=1.2% [0.2%, 4.4%] | 192/659=29.1% | 0.448 | 0.541 | 0.282 |
-| es | 26.3% | 12/161=7.5% [3.9%, 12.7%] | 155/659=23.5% | 0.526 | 0.509 | 0.340 |
-| fr | 23.8% | 0/161, 95% upper bound 2.3% | 136/659=20.6% | 0.582 | 0.524 | 0.374 |
-| ja | 32.0% | 0/161, 95% upper bound 2.3% | 214/659=32.5% | 0.428 | 0.528 | 0.270 |
-| vi | 24.0% | 7/161=4.3% [1.8%, 8.8%] | 162/659=24.6% | 0.483 | 0.438 | 0.251 |
-| zh | 26.0% | 5/161=3.1% [1.0%, 7.1%] | 136/659=20.6% | 0.509 | 0.480 | 0.318 |
+| en | 20.6% | 35/132=26.5% [19.2%, 34.9%] | 28/688=4.1% | 0.766 | 0.715 | 0.840 |
+| de | 17.1% | 13/132=9.8% [5.3%, 16.3%] | 43/688=6.2% | 0.796 | 0.726 | 0.774 |
+| es | 18.7% | 23/132=17.4% [11.4%, 25.0%] | 30/688=4.4% | 0.769 | 0.666 | 0.765 |
+| fr | 16.5% | 13/132=9.8% [5.3%, 16.3%] | 27/688=3.9% | 0.798 | 0.705 | 0.762 |
+| ja | 15.1% | 10/132=7.6% [3.7%, 13.5%] | 23/688=3.3% | 0.802 | 0.646 | 0.727 |
+| vi | 21.0% | 12/132=9.1% [4.8%, 15.3%] | 45/688=6.5% | 0.722 | 0.609 | 0.689 |
+| zh | 18.8% | 22/132=16.7% [10.7%, 24.1%] | 35/688=5.1% | 0.752 | 0.615 | 0.715 |
 
-**Mean flip rate across 7 languages (incl. English): 26.4% (database-clustered 95% CI [24.2%, 28.6%]).**
+**Mean flip rate across 7 languages (incl. English): 18.2% (database-clustered 95% CI [14.5%, 22.9%]).**
 

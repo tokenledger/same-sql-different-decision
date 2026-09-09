@@ -10,11 +10,11 @@ Database-disjoint split: 81 calibration db_ids (2995 candidates), 82 test db_ids
 
 | calibrator | en | de | es | fr | ja | vi | zh | max |Δ| vs raw |
 |---|---|---|---|---|---|---|---|---|
-| raw | 0.6890 | 0.6801 | 0.6945 | 0.6840 | 0.6650 | 0.6583 | 0.6885 | 0.00e+00 |
-| A_english_only | 0.6890 | 0.6801 | 0.6945 | 0.6840 | 0.6650 | 0.6583 | 0.6885 | 0.00e+00 |
-| B_pooled | 0.6890 | 0.6801 | 0.6945 | 0.6840 | 0.6650 | 0.6583 | 0.6885 | 0.00e+00 |
-| C_per_language | 0.6890 | 0.6801 | 0.6945 | 0.6840 | 0.6650 | 0.6583 | 0.6885 | 0.00e+00 |
-| D_shared_slope | 0.6890 | 0.6801 | 0.6945 | 0.6840 | 0.6650 | 0.6583 | 0.6885 | 0.00e+00 |
+| raw | 0.7346 | 0.7099 | 0.7318 | 0.7140 | 0.7035 | 0.6866 | 0.7256 | 0.00e+00 |
+| A_english_only | 0.7346 | 0.7099 | 0.7318 | 0.7140 | 0.7035 | 0.6866 | 0.7256 | 0.00e+00 |
+| B_pooled | 0.7346 | 0.7099 | 0.7318 | 0.7140 | 0.7035 | 0.6866 | 0.7256 | 0.00e+00 |
+| C_per_language | 0.7346 | 0.7099 | 0.7318 | 0.7140 | 0.7035 | 0.6866 | 0.7256 | 0.00e+00 |
+| D_shared_slope | 0.7346 | 0.7099 | 0.7318 | 0.7140 | 0.7035 | 0.6866 | 0.7256 | 0.00e+00 |
 
 AUROC is unchanged (<1e-6) under every calibrator, as expected for a monotone map -- calibration only rescales scores, it does not re-rank them.
 
@@ -22,75 +22,75 @@ AUROC is unchanged (<1e-6) under every calibrator, as expected for a monotone ma
 
 | calibrator | en (ECE / Brier) | de (ECE / Brier) | es (ECE / Brier) | fr (ECE / Brier) | ja (ECE / Brier) | vi (ECE / Brier) | zh (ECE / Brier) |
 |---|---|---|---|---|---|---|---|
-| raw | 0.1185 / 0.1692 | 0.1216 / 0.1729 | 0.0922 / 0.1593 | 0.1813 / 0.2040 | 0.1013 / 0.1708 | 0.1258 / 0.1762 | 0.1149 / 0.1730 |
-| A_english_only | 0.0123 / 0.1420 | 0.0152 / 0.1423 | 0.0245 / 0.1425 | 0.0330 / 0.1427 | 0.0114 / 0.1450 | 0.0269 / 0.1459 | 0.0171 / 0.1438 |
-| B_pooled | 0.0160 / 0.1427 | 0.0184 / 0.1429 | 0.0289 / 0.1432 | 0.0295 / 0.1427 | 0.0146 / 0.1454 | 0.0271 / 0.1461 | 0.0226 / 0.1442 |
-| C_per_language | 0.0123 / 0.1420 | 0.0147 / 0.1432 | 0.0186 / 0.1426 | 0.0153 / 0.1421 | 0.0173 / 0.1453 | 0.0230 / 0.1459 | 0.0192 / 0.1444 |
-| D_shared_slope | 0.0196 / 0.1425 | 0.0203 / 0.1428 | 0.0199 / 0.1427 | 0.0143 / 0.1424 | 0.0164 / 0.1453 | 0.0229 / 0.1459 | 0.0192 / 0.1440 |
+| raw | 0.1167 / 0.1514 | 0.1179 / 0.1598 | 0.0849 / 0.1414 | 0.2022 / 0.1944 | 0.1054 / 0.1544 | 0.1221 / 0.1607 | 0.1173 / 0.1561 |
+| A_english_only | 0.0179 / 0.1221 | 0.0314 / 0.1241 | 0.0337 / 0.1234 | 0.0382 / 0.1239 | 0.0188 / 0.1259 | 0.0358 / 0.1272 | 0.0262 / 0.1246 |
+| B_pooled | 0.0280 / 0.1229 | 0.0226 / 0.1246 | 0.0401 / 0.1241 | 0.0385 / 0.1238 | 0.0233 / 0.1263 | 0.0310 / 0.1274 | 0.0295 / 0.1250 |
+| C_per_language | 0.0179 / 0.1221 | 0.0178 / 0.1250 | 0.0285 / 0.1233 | 0.0205 / 0.1232 | 0.0188 / 0.1261 | 0.0360 / 0.1272 | 0.0248 / 0.1251 |
+| D_shared_slope | 0.0248 / 0.1226 | 0.0219 / 0.1244 | 0.0296 / 0.1235 | 0.0188 / 0.1234 | 0.0188 / 0.1261 | 0.0370 / 0.1272 | 0.0265 / 0.1249 |
 
 ### Realized risk / coverage at a 10%-target threshold fit on English, applied unchanged to every language
 
 Threshold fit per calibrator on English CALIBRATION-split scores (never on the test split it is then evaluated on); the SAME threshold value is then applied to every language's TEST-split scores under that SAME calibrator. This is the deployment scenario: fit once, ship everywhere.
 
-**raw** (threshold=0.8355)
+**raw** (threshold=0.7549)
 
 | lang | realized risk | coverage |
 |---|---|---|
-| en | 0.094 | 0.450 |
-| de | 0.103 | 0.467 |
-| es | 0.108 | 0.519 |
-| fr | 0.076 | 0.332 |
-| ja | 0.107 | 0.440 |
-| vi | 0.115 | 0.476 |
-| zh | 0.106 | 0.475 |
+| en | 0.078 | 0.544 |
+| de | 0.102 | 0.579 |
+| es | 0.096 | 0.646 |
+| fr | 0.068 | 0.423 |
+| ja | 0.085 | 0.566 |
+| vi | 0.107 | 0.595 |
+| zh | 0.092 | 0.565 |
 
-**A_english_only** (threshold=0.8355)
-
-| lang | realized risk | coverage |
-|---|---|---|
-| en | 0.094 | 0.450 |
-| de | 0.103 | 0.467 |
-| es | 0.108 | 0.519 |
-| fr | 0.076 | 0.332 |
-| ja | 0.107 | 0.440 |
-| vi | 0.115 | 0.476 |
-| zh | 0.106 | 0.475 |
-
-**B_pooled** (threshold=0.8344)
+**A_english_only** (threshold=0.8400)
 
 | lang | realized risk | coverage |
 |---|---|---|
-| en | 0.094 | 0.450 |
-| de | 0.103 | 0.467 |
-| es | 0.108 | 0.519 |
-| fr | 0.076 | 0.332 |
-| ja | 0.107 | 0.440 |
-| vi | 0.115 | 0.476 |
-| zh | 0.106 | 0.475 |
+| en | 0.078 | 0.544 |
+| de | 0.102 | 0.579 |
+| es | 0.096 | 0.646 |
+| fr | 0.068 | 0.423 |
+| ja | 0.085 | 0.566 |
+| vi | 0.107 | 0.595 |
+| zh | 0.092 | 0.565 |
 
-**C_per_language** (threshold=0.8355)
-
-| lang | realized risk | coverage |
-|---|---|---|
-| en | 0.094 | 0.450 |
-| de | 0.090 | 0.416 |
-| es | 0.101 | 0.456 |
-| fr | 0.103 | 0.465 |
-| ja | 0.102 | 0.425 |
-| vi | 0.104 | 0.436 |
-| zh | 0.095 | 0.433 |
-
-**D_shared_slope** (threshold=0.8325)
+**B_pooled** (threshold=0.8413)
 
 | lang | realized risk | coverage |
 |---|---|---|
-| en | 0.094 | 0.450 |
-| de | 0.098 | 0.444 |
-| es | 0.101 | 0.456 |
-| fr | 0.103 | 0.465 |
-| ja | 0.102 | 0.425 |
-| vi | 0.112 | 0.461 |
-| zh | 0.104 | 0.462 |
+| en | 0.078 | 0.544 |
+| de | 0.102 | 0.579 |
+| es | 0.096 | 0.646 |
+| fr | 0.068 | 0.423 |
+| ja | 0.085 | 0.566 |
+| vi | 0.107 | 0.595 |
+| zh | 0.092 | 0.565 |
+
+**C_per_language** (threshold=0.8400)
+
+| lang | realized risk | coverage |
+|---|---|---|
+| en | 0.078 | 0.544 |
+| de | 0.099 | 0.556 |
+| es | 0.088 | 0.579 |
+| fr | 0.094 | 0.579 |
+| ja | 0.083 | 0.542 |
+| vi | 0.106 | 0.583 |
+| zh | 0.089 | 0.556 |
+
+**D_shared_slope** (threshold=0.8389)
+
+| lang | realized risk | coverage |
+|---|---|---|
+| en | 0.078 | 0.544 |
+| de | 0.099 | 0.556 |
+| es | 0.088 | 0.579 |
+| fr | 0.094 | 0.579 |
+| ja | 0.083 | 0.542 |
+| vi | 0.106 | 0.583 |
+| zh | 0.089 | 0.556 |
 
 ### Coverage spread across languages (max−min coverage), the headline number
 
@@ -98,81 +98,81 @@ Bootstrap over 2000 resamples of test QUESTIONS (item_idx), percentile 95% CI. T
 
 | calibrator | coverage spread | 95% CI |
 |---|---|---|
-| raw | 0.187 | [0.159, 0.215] |
-| A_english_only | 0.187 | [0.159, 0.215] |
-| B_pooled | 0.187 | [0.160, 0.216] |
-| C_per_language | 0.049 | [0.034, 0.074] |
-| D_shared_slope | 0.040 | [0.025, 0.071] |
+| raw | 0.223 | [0.193, 0.253] |
+| A_english_only | 0.223 | [0.193, 0.253] |
+| B_pooled | 0.223 | [0.193, 0.253] |
+| C_per_language | 0.040 | [0.031, 0.077] |
+| D_shared_slope | 0.040 | [0.031, 0.078] |
 
 ### Per-language data cost: calibrator D (shared slope, per-language intercept only) vs. calibrator C (full per-language slope+intercept)
 
-D's shared slope is fixed at the full-training-data value (0.3057, already fit above from all languages pooled); only the intercept is re-estimated per language below, so D needs only 1 free parameter per language vs. C's 2. For each language and sample size n (n train QUESTIONS from that language, all their candidates), we refit C from scratch and refit only D's intercept, then score both on the SAME held-out test split and report ECE, averaged over 5 seeds for n<=100. Full-data column reuses the ECE already reported above.
+D's shared slope is fixed at the full-training-data value (0.3623, already fit above from all languages pooled); only the intercept is re-estimated per language below, so D needs only 1 free parameter per language vs. C's 2. For each language and sample size n (n train QUESTIONS from that language, all their candidates), we refit C from scratch and refit only D's intercept, then score both on the SAME held-out test split and report ECE, averaged over 5 seeds for n<=100. Full-data column reuses the ECE already reported above.
 
 **de**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.1000 | 0.0625 |
-| 25 | 0.1420 | 0.0768 |
-| 50 | 0.0628 | 0.0524 |
-| 100 | 0.0248 | 0.0255 |
-| 250 | 0.0271 | 0.0178 |
-| all (599) | 0.0147 | 0.0203 |
+| 10 | 0.0848 | 0.0470 |
+| 25 | 0.1237 | 0.0620 |
+| 50 | 0.0672 | 0.0588 |
+| 100 | 0.0331 | 0.0338 |
+| 250 | 0.0303 | 0.0300 |
+| all (599) | 0.0178 | 0.0219 |
 
 **es**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.0738 | 0.0726 |
-| 25 | 0.1232 | 0.0755 |
-| 50 | 0.0562 | 0.0501 |
-| 100 | 0.0336 | 0.0375 |
-| 250 | 0.0365 | 0.0200 |
-| all (599) | 0.0186 | 0.0199 |
+| 10 | 0.0478 | 0.0559 |
+| 25 | 0.1088 | 0.0584 |
+| 50 | 0.0585 | 0.0575 |
+| 100 | 0.0355 | 0.0359 |
+| 250 | 0.0418 | 0.0384 |
+| all (599) | 0.0285 | 0.0296 |
 
 **fr**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.0643 | 0.0606 |
-| 25 | 0.1294 | 0.0732 |
-| 50 | 0.0554 | 0.0469 |
-| 100 | 0.0368 | 0.0304 |
-| 250 | 0.0225 | 0.0129 |
-| all (599) | 0.0153 | 0.0143 |
+| 10 | 0.0435 | 0.0439 |
+| 25 | 0.1146 | 0.0563 |
+| 50 | 0.0539 | 0.0511 |
+| 100 | 0.0339 | 0.0321 |
+| 250 | 0.0296 | 0.0313 |
+| all (599) | 0.0205 | 0.0188 |
 
 **ja**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.0890 | 0.0673 |
-| 25 | 0.1260 | 0.0778 |
-| 50 | 0.0579 | 0.0508 |
-| 100 | 0.0255 | 0.0263 |
-| 250 | 0.0257 | 0.0164 |
-| all (599) | 0.0173 | 0.0164 |
+| 10 | 0.0889 | 0.0506 |
+| 25 | 0.1106 | 0.0632 |
+| 50 | 0.0563 | 0.0572 |
+| 100 | 0.0311 | 0.0293 |
+| 250 | 0.0254 | 0.0265 |
+| all (599) | 0.0188 | 0.0188 |
 
 **vi**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.0926 | 0.0685 |
-| 25 | 0.1004 | 0.0782 |
-| 50 | 0.0610 | 0.0447 |
-| 100 | 0.0336 | 0.0315 |
-| 250 | 0.0135 | 0.0160 |
-| all (599) | 0.0230 | 0.0229 |
+| 10 | 0.0721 | 0.0536 |
+| 25 | 0.0860 | 0.0618 |
+| 50 | 0.0665 | 0.0525 |
+| 100 | 0.0398 | 0.0340 |
+| 250 | 0.0345 | 0.0313 |
+| all (599) | 0.0360 | 0.0370 |
 
 **zh**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.1015 | 0.0682 |
-| 25 | 0.1042 | 0.0726 |
-| 50 | 0.0614 | 0.0481 |
-| 100 | 0.0314 | 0.0306 |
-| 250 | 0.0306 | 0.0180 |
-| all (599) | 0.0192 | 0.0192 |
+| 10 | 0.0873 | 0.0493 |
+| 25 | 0.0850 | 0.0589 |
+| 50 | 0.0586 | 0.0573 |
+| 100 | 0.0409 | 0.0360 |
+| 250 | 0.0311 | 0.0314 |
+| all (599) | 0.0248 | 0.0265 |
 
 ### Parameter cost summary
 
@@ -190,11 +190,11 @@ Database-disjoint split: 81 calibration db_ids (2995 candidates), 82 test db_ids
 
 | calibrator | en | de | es | fr | ja | vi | zh | max |Δ| vs raw |
 |---|---|---|---|---|---|---|---|---|
-| raw | 0.6968 | 0.6663 | 0.6935 | 0.6850 | 0.6501 | 0.6751 | 0.6605 | 0.00e+00 |
-| A_english_only | 0.6968 | 0.6663 | 0.6935 | 0.6850 | 0.6501 | 0.6751 | 0.6605 | 0.00e+00 |
-| B_pooled | 0.6968 | 0.6663 | 0.6935 | 0.6850 | 0.6501 | 0.6751 | 0.6605 | 0.00e+00 |
-| C_per_language | 0.6968 | 0.6663 | 0.6935 | 0.6850 | 0.6501 | 0.6751 | 0.6605 | 0.00e+00 |
-| D_shared_slope | 0.6968 | 0.6663 | 0.6935 | 0.6850 | 0.6501 | 0.6751 | 0.6605 | 0.00e+00 |
+| raw | 0.7540 | 0.7158 | 0.7427 | 0.7286 | 0.7005 | 0.7057 | 0.7174 | 0.00e+00 |
+| A_english_only | 0.7540 | 0.7158 | 0.7427 | 0.7286 | 0.7005 | 0.7057 | 0.7174 | 0.00e+00 |
+| B_pooled | 0.7540 | 0.7158 | 0.7427 | 0.7286 | 0.7005 | 0.7057 | 0.7174 | 0.00e+00 |
+| C_per_language | 0.7540 | 0.7158 | 0.7427 | 0.7286 | 0.7005 | 0.7057 | 0.7174 | 0.00e+00 |
+| D_shared_slope | 0.7540 | 0.7158 | 0.7427 | 0.7286 | 0.7005 | 0.7057 | 0.7174 | 0.00e+00 |
 
 AUROC is unchanged (<1e-6) under every calibrator, as expected for a monotone map -- calibration only rescales scores, it does not re-rank them.
 
@@ -202,11 +202,11 @@ AUROC is unchanged (<1e-6) under every calibrator, as expected for a monotone ma
 
 | calibrator | en (ECE / Brier) | de (ECE / Brier) | es (ECE / Brier) | fr (ECE / Brier) | ja (ECE / Brier) | vi (ECE / Brier) | zh (ECE / Brier) |
 |---|---|---|---|---|---|---|---|
-| raw | 0.1837 / 0.1869 | 0.2193 / 0.2217 | 0.2073 / 0.2081 | 0.2160 / 0.2168 | 0.2213 / 0.2215 | 0.2359 / 0.2364 | 0.2174 / 0.2200 |
-| A_english_only | 0.0159 / 0.1391 | 0.0204 / 0.1434 | 0.0269 / 0.1389 | 0.0284 / 0.1417 | 0.0174 / 0.1455 | 0.0324 / 0.1428 | 0.0140 / 0.1430 |
-| B_pooled | 0.0211 / 0.1407 | 0.0172 / 0.1431 | 0.0185 / 0.1401 | 0.0177 / 0.1423 | 0.0148 / 0.1450 | 0.0175 / 0.1420 | 0.0143 / 0.1430 |
-| C_per_language | 0.0159 / 0.1391 | 0.0183 / 0.1432 | 0.0172 / 0.1396 | 0.0170 / 0.1417 | 0.0119 / 0.1451 | 0.0149 / 0.1421 | 0.0177 / 0.1436 |
-| D_shared_slope | 0.0234 / 0.1399 | 0.0151 / 0.1431 | 0.0203 / 0.1400 | 0.0175 / 0.1422 | 0.0108 / 0.1450 | 0.0135 / 0.1420 | 0.0194 / 0.1432 |
+| raw | 0.1574 / 0.1602 | 0.1957 / 0.1981 | 0.1803 / 0.1812 | 0.1890 / 0.1902 | 0.1956 / 0.1960 | 0.2183 / 0.2171 | 0.1918 / 0.1939 |
+| A_english_only | 0.0273 / 0.1186 | 0.0279 / 0.1241 | 0.0285 / 0.1182 | 0.0237 / 0.1216 | 0.0227 / 0.1254 | 0.0359 / 0.1243 | 0.0239 / 0.1224 |
+| B_pooled | 0.0493 / 0.1206 | 0.0225 / 0.1237 | 0.0228 / 0.1199 | 0.0211 / 0.1224 | 0.0231 / 0.1248 | 0.0187 / 0.1230 | 0.0284 / 0.1225 |
+| C_per_language | 0.0273 / 0.1186 | 0.0240 / 0.1237 | 0.0210 / 0.1192 | 0.0170 / 0.1218 | 0.0202 / 0.1250 | 0.0132 / 0.1232 | 0.0299 / 0.1232 |
+| D_shared_slope | 0.0321 / 0.1197 | 0.0215 / 0.1236 | 0.0189 / 0.1197 | 0.0162 / 0.1222 | 0.0198 / 0.1248 | 0.0159 / 0.1230 | 0.0298 / 0.1227 |
 
 ### Realized risk / coverage at a 10%-target threshold fit on English, applied unchanged to every language
 
@@ -216,61 +216,61 @@ Threshold fit per calibrator on English CALIBRATION-split scores (never on the t
 
 | lang | realized risk | coverage |
 |---|---|---|
-| en | 0.089 | 0.304 |
-| de | 0.082 | 0.098 |
-| es | 0.100 | 0.174 |
-| fr | 0.074 | 0.135 |
-| ja | 0.104 | 0.199 |
-| vi | 0.106 | 0.103 |
-| zh | 0.114 | 0.260 |
+| en | 0.085 | 0.610 |
+| de | 0.082 | 0.499 |
+| es | 0.074 | 0.537 |
+| fr | 0.079 | 0.529 |
+| ja | 0.094 | 0.554 |
+| vi | 0.087 | 0.462 |
+| zh | 0.089 | 0.564 |
 
-**A_english_only** (threshold=0.8697)
-
-| lang | realized risk | coverage |
-|---|---|---|
-| en | 0.089 | 0.304 |
-| de | 0.082 | 0.098 |
-| es | 0.100 | 0.174 |
-| fr | 0.074 | 0.135 |
-| ja | 0.104 | 0.199 |
-| vi | 0.106 | 0.103 |
-| zh | 0.114 | 0.260 |
-
-**B_pooled** (threshold=0.8743)
+**A_english_only** (threshold=0.8689)
 
 | lang | realized risk | coverage |
 |---|---|---|
-| en | 0.089 | 0.304 |
-| de | 0.082 | 0.098 |
-| es | 0.100 | 0.174 |
-| fr | 0.074 | 0.135 |
-| ja | 0.104 | 0.199 |
-| vi | 0.106 | 0.103 |
-| zh | 0.114 | 0.260 |
+| en | 0.085 | 0.610 |
+| de | 0.082 | 0.499 |
+| es | 0.074 | 0.537 |
+| fr | 0.079 | 0.529 |
+| ja | 0.094 | 0.554 |
+| vi | 0.087 | 0.462 |
+| zh | 0.089 | 0.564 |
 
-**C_per_language** (threshold=0.8697)
-
-| lang | realized risk | coverage |
-|---|---|---|
-| en | 0.089 | 0.304 |
-| de | 0.107 | 0.170 |
-| es | 0.099 | 0.325 |
-| fr | 0.101 | 0.294 |
-| ja | 0.100 | 0.209 |
-| vi | 0.102 | 0.298 |
-| zh | 0.124 | 0.347 |
-
-**D_shared_slope** (threshold=0.8630)
+**B_pooled** (threshold=0.8776)
 
 | lang | realized risk | coverage |
 |---|---|---|
-| en | 0.089 | 0.304 |
-| de | 0.117 | 0.354 |
-| es | 0.103 | 0.375 |
-| fr | 0.101 | 0.294 |
-| ja | 0.125 | 0.400 |
-| vi | 0.115 | 0.419 |
-| zh | 0.125 | 0.522 |
+| en | 0.085 | 0.610 |
+| de | 0.082 | 0.499 |
+| es | 0.074 | 0.537 |
+| fr | 0.079 | 0.529 |
+| ja | 0.094 | 0.554 |
+| vi | 0.087 | 0.462 |
+| zh | 0.089 | 0.564 |
+
+**C_per_language** (threshold=0.8689)
+
+| lang | realized risk | coverage |
+|---|---|---|
+| en | 0.085 | 0.610 |
+| de | 0.084 | 0.577 |
+| es | 0.079 | 0.609 |
+| fr | 0.081 | 0.602 |
+| ja | 0.099 | 0.590 |
+| vi | 0.090 | 0.579 |
+| zh | 0.097 | 0.660 |
+
+**D_shared_slope** (threshold=0.8642)
+
+| lang | realized risk | coverage |
+|---|---|---|
+| en | 0.085 | 0.610 |
+| de | 0.086 | 0.610 |
+| es | 0.083 | 0.633 |
+| fr | 0.082 | 0.611 |
+| ja | 0.101 | 0.628 |
+| vi | 0.092 | 0.605 |
+| zh | 0.099 | 0.694 |
 
 ### Coverage spread across languages (max−min coverage), the headline number
 
@@ -278,81 +278,81 @@ Bootstrap over 2000 resamples of test QUESTIONS (item_idx), percentile 95% CI. T
 
 | calibrator | coverage spread | 95% CI |
 |---|---|---|
-| raw | 0.206 | [0.179, 0.240] |
-| A_english_only | 0.206 | [0.180, 0.240] |
-| B_pooled | 0.206 | [0.180, 0.240] |
-| C_per_language | 0.176 | [0.146, 0.209] |
-| D_shared_slope | 0.228 | [0.198, 0.266] |
+| raw | 0.148 | [0.111, 0.183] |
+| A_english_only | 0.148 | [0.110, 0.183] |
+| B_pooled | 0.148 | [0.113, 0.185] |
+| C_per_language | 0.083 | [0.058, 0.122] |
+| D_shared_slope | 0.089 | [0.070, 0.128] |
 
 ### Per-language data cost: calibrator D (shared slope, per-language intercept only) vs. calibrator C (full per-language slope+intercept)
 
-D's shared slope is fixed at the full-training-data value (0.0492, already fit above from all languages pooled); only the intercept is re-estimated per language below, so D needs only 1 free parameter per language vs. C's 2. For each language and sample size n (n train QUESTIONS from that language, all their candidates), we refit C from scratch and refit only D's intercept, then score both on the SAME held-out test split and report ECE, averaged over 5 seeds for n<=100. Full-data column reuses the ECE already reported above.
+D's shared slope is fixed at the full-training-data value (0.0564, already fit above from all languages pooled); only the intercept is re-estimated per language below, so D needs only 1 free parameter per language vs. C's 2. For each language and sample size n (n train QUESTIONS from that language, all their candidates), we refit C from scratch and refit only D's intercept, then score both on the SAME held-out test split and report ECE, averaged over 5 seeds for n<=100. Full-data column reuses the ECE already reported above.
 
 **de**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.1359 | 0.0664 |
-| 25 | 0.1022 | 0.0776 |
-| 50 | 0.0676 | 0.0491 |
-| 100 | 0.0256 | 0.0255 |
-| 250 | 0.0213 | 0.0161 |
-| all (599) | 0.0183 | 0.0151 |
+| 10 | 0.1132 | 0.0654 |
+| 25 | 0.0944 | 0.0659 |
+| 50 | 0.0645 | 0.0571 |
+| 100 | 0.0326 | 0.0343 |
+| 250 | 0.0181 | 0.0187 |
+| all (599) | 0.0240 | 0.0215 |
 
 **es**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.1438 | 0.0591 |
-| 25 | 0.0770 | 0.0749 |
-| 50 | 0.0624 | 0.0550 |
-| 100 | 0.0301 | 0.0297 |
-| 250 | 0.0158 | 0.0201 |
-| all (599) | 0.0172 | 0.0203 |
+| 10 | 0.1147 | 0.0585 |
+| 25 | 0.0717 | 0.0587 |
+| 50 | 0.0602 | 0.0631 |
+| 100 | 0.0355 | 0.0421 |
+| 250 | 0.0287 | 0.0194 |
+| all (599) | 0.0210 | 0.0189 |
 
 **fr**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.1276 | 0.0603 |
-| 25 | 0.0806 | 0.0703 |
-| 50 | 0.0574 | 0.0521 |
-| 100 | 0.0382 | 0.0286 |
-| 250 | 0.0243 | 0.0207 |
-| all (599) | 0.0170 | 0.0175 |
+| 10 | 0.0969 | 0.0564 |
+| 25 | 0.0648 | 0.0562 |
+| 50 | 0.0643 | 0.0583 |
+| 100 | 0.0386 | 0.0375 |
+| 250 | 0.0195 | 0.0178 |
+| all (599) | 0.0170 | 0.0162 |
 
 **ja**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.1398 | 0.0700 |
-| 25 | 0.0847 | 0.0744 |
-| 50 | 0.0571 | 0.0525 |
-| 100 | 0.0335 | 0.0289 |
-| 250 | 0.0144 | 0.0103 |
-| all (599) | 0.0119 | 0.0108 |
+| 10 | 0.1124 | 0.0502 |
+| 25 | 0.0790 | 0.0606 |
+| 50 | 0.0629 | 0.0578 |
+| 100 | 0.0321 | 0.0341 |
+| 250 | 0.0294 | 0.0274 |
+| all (599) | 0.0202 | 0.0198 |
 
 **vi**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.1574 | 0.0661 |
-| 25 | 0.0987 | 0.0690 |
-| 50 | 0.0548 | 0.0467 |
-| 100 | 0.0221 | 0.0208 |
-| 250 | 0.0131 | 0.0177 |
-| all (599) | 0.0149 | 0.0135 |
+| 10 | 0.1463 | 0.0495 |
+| 25 | 0.0865 | 0.0557 |
+| 50 | 0.0542 | 0.0467 |
+| 100 | 0.0348 | 0.0262 |
+| 250 | 0.0163 | 0.0157 |
+| all (599) | 0.0132 | 0.0159 |
 
 **zh**
 
 | n questions | ECE (C) | ECE (D-intercept-only) |
 |---|---|---|
-| 10 | 0.1393 | 0.0623 |
-| 25 | 0.0751 | 0.0601 |
-| 50 | 0.0515 | 0.0444 |
-| 100 | 0.0296 | 0.0334 |
-| 250 | 0.0134 | 0.0181 |
-| all (599) | 0.0177 | 0.0194 |
+| 10 | 0.1020 | 0.0574 |
+| 25 | 0.0566 | 0.0521 |
+| 50 | 0.0579 | 0.0476 |
+| 100 | 0.0318 | 0.0284 |
+| 250 | 0.0357 | 0.0298 |
+| all (599) | 0.0299 | 0.0298 |
 
 ### Parameter cost summary
 
@@ -364,4 +364,4 @@ D: 1 shared slope + 7 intercepts (8 total); the slope pools data across all lang
 
 ## Verdict
 
-A and B use one function of raw confidence for every language, so they inherit the original problem almost exactly (confirmed, not assumed: A/B's per-language coverage numbers are identical to raw's to 3 decimals in both backends) -- a monotone reparametrization cannot change which candidates rank above a per-language threshold. C (a fully separate calibrator per language) closes most of the gap for llama-8b: coverage spread drops from 0.187 to 0.049. D (shared slope, per-language intercept) does even better for llama-8b, reaching 0.040 -- the shared-slope assumption holds almost exactly there, so the cheap fix is free and even edges out full per-language calibration. For qwen-7b neither works: C only reaches 0.176 (from a raw 0.206), and D is WORSE than doing nothing at 0.228. Qwen is the saturated verifier (most English scores sit within a hair of 1.0), and fitting a logistic map on the logits of near-ceiling scores is ill-conditioned, so the per-language intercept-only model overshoots rather than corrects. The learning-curve check shows D needs only ~25-50 labelled per-language questions to approach its full-data ECE where it DOES work (llama-8b), while C needs closer to the full few-hundred-question budget to stabilize both its slope and intercept -- so D is the cheaper option exactly when it is also a viable substitute for C, and not otherwise. One caveat visible in the risk tables: even under C/D, realized risk on non-English languages runs above the 10% target for qwen-7b (up to ~12.5%) -- calibration equalizes SCALE, it does not guarantee the target-risk threshold transfers perfectly, especially for the noisier, saturated verifier. Net recommendation: language-aware calibration is not reliably available in general -- it depends on the verifier's score distribution being well spread (llama-8b) rather than piled up near a ceiling (qwen-7b), where even the richer per-language calibrator C only partially closes the gap and the cheaper shared-slope D actively makes it worse.
+A and B use one function of raw confidence for every language, so they inherit the original problem almost exactly (A/B's per-language coverage numbers match raw's to 3 decimals in both backends): a monotone reparametrization cannot change which candidates rank above a per-language threshold. C (a separate calibrator per language) and D (shared slope, per-language intercept) both reduce the coverage spread; the tables above give the values. They help most for the verifier whose score distribution is well spread (llama-8b) and least for the saturated one (qwen-7b), where most English scores sit within a hair of 1.0 and fitting a logistic map on near-ceiling logits is ill-conditioned. The learning-curve check measures ECE, not coverage: D approaches its full-data ECE with roughly 25-50 labelled per-language questions, while C needs closer to the full budget; note that D's shared slope is fitted on all languages' calibration data, so the per-language count is not its total data requirement. Calibration equalizes scale; it does not guarantee the target-risk threshold transfers, and realized non-English risk under C/D can still run above target for the saturated verifier.

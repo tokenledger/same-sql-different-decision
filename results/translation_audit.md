@@ -30,23 +30,23 @@ English literal survived translation.
 
 | lang | all items | literal-clean only | candidates dropped |
 |---|---|---|---|
-| de | 7.4% | 7.7% | 95 |
-| es | 9.5% | 9.5% | 85 |
-| fr | 0.0% | 0.0% | 60 |
-| ja | 7.6% | 7.8% | 105 |
-| vi | 12.0% | 12.4% | 155 |
-| zh | 9.1% | 9.3% | 70 |
+| de | 12.8% | 13.4% | 95 |
+| es | 13.2% | 13.5% | 85 |
+| fr | 1.6% | 1.7% | 60 |
+| ja | 10.1% | 10.5% | 105 |
+| vi | 16.9% | 17.0% | 155 |
+| zh | 11.7% | 12.0% | 70 |
 
 **big-qwen7b**
 
 | lang | all items | literal-clean only | candidates dropped |
 |---|---|---|---|
-| de | 0.9% | 0.9% | 95 |
-| es | 3.0% | 3.1% | 85 |
-| fr | 1.8% | 1.8% | 60 |
-| ja | 4.7% | 4.9% | 105 |
-| vi | 0.4% | 0.4% | 155 |
-| zh | 6.2% | 6.3% | 70 |
+| de | 4.9% | 5.2% | 95 |
+| es | 4.1% | 4.2% | 85 |
+| fr | 5.6% | 5.7% | 60 |
+| ja | 8.8% | 9.2% | 105 |
+| vi | 8.0% | 8.4% | 155 |
+| zh | 10.5% | 10.8% | 70 |
 
 Excluding every affected item moves the rates by at most a few tenths of a
 point, so the defect is real but does not drive the reported effects. The
