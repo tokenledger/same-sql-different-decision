@@ -1,6 +1,6 @@
 """Can a target-language score be mapped onto the English scale?
 
-The decision-level result says an English-calibrated threshold changes 12-23% of
+The decision-level result says an English-calibrated threshold changes 14-27% of
 individual execution decisions. This asks whether any score transport restores
 the ENGLISH decisions -- not merely equal coverage, which rank matching already
 achieves while still flipping which specific queries run.

@@ -296,7 +296,7 @@ def aya_saturation() -> list[str]:
         risk_en, cov_en = float("nan"), float("nan")
 
     lines += [
-        f"English AUROC (all 1,500 candidates): {en_auroc:.4f}"
+        f"English AUROC (all {len(labels):,} candidates): {en_auroc:.4f}"
         if en_auroc is not None else "English AUROC: undefined (single class)",
         f"Threshold (fit on English calibration scores, 10% target): "
         f"{'n/a' if thr is None else f'{thr:.4f}'}",
@@ -308,10 +308,10 @@ def aya_saturation() -> list[str]:
         f"| English coverage at its own 10%-target threshold (test split) | {cov_en:.1%} |",
         f"| realized English risk at that threshold (test split) | {risk_en:.3f} |",
         "",
-        "The paper's saturation gate uses the prespecified (English-only, "
-        "within-1e-6) definition, 72.5%; the pooled >0.999 figure (93.4%) is a "
-        "looser statistic mixed in by mistake in an earlier draft and should "
-        "not be quoted as the gate criterion.",
+        f"The paper's saturation gate uses the prespecified (English-only, "
+        f"within-1e-6) definition, {strict_en:.1%}; the pooled >0.999 figure "
+        f"({loose:.1%}) is a looser statistic mixed in by mistake in an earlier "
+        f"draft and should not be quoted as the gate criterion.",
         "",
     ]
     return lines
@@ -330,7 +330,7 @@ def canonical_operating_point() -> list[str]:
         "",
         "Threshold fit on calibration-split English at the 10% target (canonical split), "
         "then applied to every language on the test split; the full-corpus block refits "
-        "the threshold on all 6,000 English scores (descriptive, in-sample). Risk CIs are "
+        "the threshold on every English score in the corpus (descriptive, in-sample). Risk CIs are "
         "question-clustered percentile bootstraps (4,000 resamples).",
         "",
     ]

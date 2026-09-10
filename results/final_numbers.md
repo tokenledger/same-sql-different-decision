@@ -47,7 +47,7 @@ The paper's saturation gate uses the prespecified (English-only, within-1e-6) de
 
 ## 5. Canonical operating point: thresholds, AUROC gaps, risk intervals
 
-Threshold fit on calibration-split English at the 10% target (canonical split), then applied to every language on the test split; the full-corpus block refits the threshold on all 6,000 English scores (descriptive, in-sample). Risk CIs are question-clustered percentile bootstraps (4,000 resamples).
+Threshold fit on calibration-split English at the 10% target (canonical split), then applied to every language on the test split; the full-corpus block refits the threshold on every English score in the corpus (descriptive, in-sample). Risk CIs are question-clustered percentile bootstraps (4,000 resamples).
 
 ### Llama-3.1-8B
 

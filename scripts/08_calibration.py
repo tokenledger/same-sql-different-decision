@@ -4,8 +4,8 @@ Prior result (results/significance.md, scripts/05_analyze.py): raw verifier
 confidence RANKS candidates about equally well in every language (AUROC gaps
 <=0.027, mostly not significant), but an abstention threshold fit on English
 does NOT transfer to other languages. At matched raw threshold, realized risk
-stays near target while coverage swings hugely (e.g. Qwen-7B: 36.0% coverage
-in English vs 14.1% in German). So the verifier's scores are not on a
+stays near target while coverage swings across languages (see
+results/calibration.md for current values). So the verifier's scores are not on a
 comparable SCALE across languages, even though they rank fine within each one.
 
 This script asks whether post-hoc calibration (mapping raw confidence to a
@@ -65,7 +65,7 @@ EPS = 1e-12  # clip before logit; Qwen confidences pile up NEAR 1.0 (not exactly
 # eps as coarse as 1e-6 collapses thousands of genuinely-distinct near-1 raw scores onto
 # one clipped value, shattering rank order and silently corrupting AUROC/threshold search
 # downstream. Checked empirically: with eps=1e-12 zero Qwen scores collapse; with 1e-6,
-# 22675/42000 score pairs (across languages) get glued together.
+# a large share of score pairs (across languages) get glued together.
 
 
 def logit(p: np.ndarray) -> np.ndarray:

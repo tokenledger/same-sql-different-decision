@@ -103,7 +103,12 @@ def main() -> None:
             f"| {c['candidate_id']} | {c['db_id']} | {int(c['old'])} | {int(c['new'])} | `{sql}` | `{gold}` |"
         )
     RESULTS_DIR.mkdir(exist_ok=True)
-    (RESULTS_DIR / "relabel_column_order.md").write_text("\n".join(lines) + "\n")
+    report = RESULTS_DIR / "relabel_column_order.md"
+    if not changed and report.exists():
+        # Re-running on already-relabeled data: keep the original diff report.
+        print("no labels changed; existing report kept")
+    else:
+        report.write_text("\n".join(lines) + "\n")
     print(f"{len(changed)} labels changed; {n_correct}/{len(cands)} correct")
 
 

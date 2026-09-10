@@ -66,30 +66,94 @@ def _normalize_cell(v):
     return v
 
 
+def _sort_key(v):
+    """Type-aware sort key so that 1 and 1.0 (equal) sort identically.
+
+    A str() key would place 1 and 1.0 differently and make two equal
+    multisets compare unequal after sorting."""
+    if v is None:
+        return (0, 0.0, "")
+    if isinstance(v, (int, float)):
+        return (1, float(v), "")
+    return (2, 0.0, str(v))
+
+
 def _normalize_rows(rows: list[tuple], ordered: bool) -> list:
     norm = [tuple(_normalize_cell(c) for c in row) for row in rows]
     if ordered:
         return norm
-    # Order-insensitive multiset comparison; str() keys make mixed types sortable.
-    return sorted(norm, key=lambda r: tuple(str(c) for c in r))
+    # Order-insensitive multiset comparison.
+    return sorted(norm, key=lambda r: tuple(_sort_key(c) for c in r))
 
 
 def has_order_by(sql: str) -> bool:
     return re.search(r"\border\s+by\b", sql, flags=re.IGNORECASE) is not None
 
 
-# Column permutations are enumerated exhaustively up to this width; wider
-# results fall back to positional comparison (no Spider gold query is this wide).
+# Column permutations are enumerated exhaustively up to this width. Wider
+# results (six gold queries in the corpus, 7 to 13 columns) use a
+# column-matching search instead, which is exact and avoids factorial blowup.
 MAX_PERMUTED_COLUMNS = 6
 
 
 def _column_permutations(rows: list[tuple], width: int):
     """Yield `rows` under every reordering of its columns (identity first)."""
-    if width > MAX_PERMUTED_COLUMNS:
-        yield rows
-        return
     for perm in permutations(range(width)):
         yield [tuple(r[i] for i in perm) for r in rows]
+
+
+def _columns(rows: list[tuple], width: int) -> list[tuple]:
+    return [tuple(r[i] for r in rows) for i in range(width)]
+
+
+def _wide_match(pred_rows: list[tuple], gold_rows: list[tuple], ordered: bool) -> bool:
+    """Exact column-permutation match for wide results.
+
+    Match each gold column to a distinct predicted column with identical
+    contents, then check the matched permutation. Column contents are
+    compared as sequences when `ordered`, otherwise the row multiset is
+    checked after the columns are aligned. Uses backtracking over columns
+    with equal content, which is tiny in practice."""
+    pred_cols = _columns(pred_rows, width := len(gold_rows[0]))
+    gold_cols = _columns(gold_rows, width)
+    # Candidate predicted columns for each gold column.
+    cands = [[j for j, pc in enumerate(pred_cols) if pc == gc] for gc in gold_cols]
+    if ordered:
+        # Column contents already respect row order; any injective assignment works.
+        return _assign(cands, width, [None] * width) is not None
+    gold_norm = _normalize_rows(gold_rows, ordered=False)
+    # Under multiset comparison a column-wise match is necessary but not
+    # sufficient (rows could be recombined), so verify each assignment.
+    for perm in _assignments(cands, width):
+        permuted = [tuple(r[i] for i in perm) for r in pred_rows]
+        if _normalize_rows(permuted, ordered=False) == gold_norm:
+            return True
+    return False
+
+
+def _assignments(cands: list[list[int]], width: int):
+    """All injective assignments gold column -> predicted column."""
+    used: set[int] = set()
+    perm: list[int] = []
+
+    def rec(i: int):
+        if i == width:
+            yield list(perm)
+            return
+        for j in cands[i]:
+            if j in used:
+                continue
+            used.add(j)
+            perm.append(j)
+            yield from rec(i + 1)
+            perm.pop()
+            used.discard(j)
+
+    yield from rec(0)
+
+
+def _assign(cands, width, _unused):
+    return next(_assignments(cands, width), None)
 
 
 def rows_match(pred_rows: list[tuple], gold_rows: list[tuple], ordered: bool) -> bool:
@@ -109,6 +173,8 @@ def rows_match(pred_rows: list[tuple], gold_rows: list[tuple], ordered: bool) ->
     width = len(gold_rows[0])
     if any(len(r) != width for r in pred_rows):
         return False
+    if width > MAX_PERMUTED_COLUMNS:
+        return _wide_match(pred_rows, gold_rows, ordered)
     gold_norm = _normalize_rows(gold_rows, ordered)
     for permuted in _column_permutations(pred_rows, width):
         if _normalize_rows(permuted, ordered) == gold_norm:
