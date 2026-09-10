@@ -17,7 +17,7 @@ ja, vi, zh) while the SQL, schema, database, and label stay fixed: 42,000 scores
 per verifier, 84,000 in total. Additional score files cover two mitigations
 (pivot translation and bilingual prompting, both verifiers, six non-English
 languages) and an architecture-screening subset (300 questions, 39 databases,
-eight verifier and verbalizer configurations). Every number in the paper is
+eight verifier and verbalizer configurations). Every number in the paper (kept in the separate `sql_oracle_paper` repository) is
 recomputed from these saved scores by a script under `scripts/`.
 
 ## Repository layout
@@ -32,7 +32,6 @@ recomputed from these saved scores by a script under `scripts/`.
 | `scripts/` | Numbered analysis scripts and the `build_*_notebook.py` emitters. |
 | `src/xsql/` | Library: config, data loading, sandboxed SQLite execution and labeling, generation, verifiers, metrics. |
 | `notebooks/` | Colab notebooks that ran the GPU work (generation and scoring). Emitted by the build scripts. |
-| `paper/` | `draft.md` (content source of truth) and `acl/` (LaTeX submission, `main.tex`). |
 
 `data/verifier_cache.sqlite` is the disk cache for the pilot-era API verifier
 and is not needed for anything below.
@@ -78,7 +77,7 @@ run inference. They are not part of the paper's reproduction.
 
 ### Table and figure to script map
 
-Numbering follows the compiled `paper/acl/main.pdf` (main-body Tables 1 to 6,
+Numbering follows the compiled paper (`acl/main.pdf` in the `sql_oracle_paper` repository) (main-body Tables 1 to 6,
 appendix Tables 7 to 23).
 
 | paper item | script | results file |

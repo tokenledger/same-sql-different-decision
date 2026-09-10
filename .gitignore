@@ -8,3 +8,14 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local tool configuration and OS files
+.mcp.json
+.claude/
+.DS_Store
+
+# Paper sources live in the separate sql_oracle_paper repository
+paper/
+HANDOFF.md
+1.txt
+results/project_walkthrough.*
