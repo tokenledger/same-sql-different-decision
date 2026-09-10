@@ -1,56 +1,48 @@
-"""Emit the Colab notebook for the ARCHITECTURE / label-word robustness experiment.
+"""Emit the Colab notebook for the architecture / label-word robustness experiment.
 
 Background: `scripts/build_colab_notebook.py` established that AUROC transfers
-across languages but the score SCALE does not, so one English-calibrated
-threshold flips 12-23% of individual execute/defer decisions on IDENTICAL SQL
-(Llama-3.1-8B, Qwen2.5-7B-Instruct -- both dense decoder-only Transformers).
+across languages but the score scale does not, so one English-calibrated
+threshold flips 12-23% of individual execute/defer decisions on identical SQL
+(Llama-3.1-8B and Qwen2.5-7B-Instruct, both dense decoder-only Transformers).
 That is family-level replication, not architectural or training-distribution
 diversity. This notebook adds three things, in priority order:
 
-  1. LABEL-WORD ROBUSTNESS (cheap, done first, on the EXISTING two verifiers).
-     `src/xsql/verify_local.py` already reads P(Yes)/(P(Yes)+P(No)) off the
-     next-token logits of a forced-choice prompt -- there is no free-form
-     numeric confidence step to interrogate. What IS still open is whether the
-     12-23% flip rate is an artifact of the specific verdict tokens "Yes"/"No".
-     This re-scores with the prompt's final line changed to
-     "Answer with a single word, CORRECT or INCORRECT." -- everything else
-     (system message, schema, question, SQL, temperature=implicit-greedy
-     single forward pass) byte-identical to `src/xsql/verify_local.py`. This
-     also probes whether Qwen2.5-7B's ceiling saturation (82% of English
-     scores > 0.99, 10%-risk threshold at 0.99999996, which broke isotonic
-     transport in scripts/13_transport.py) is specific to the word "Yes".
+  1. Label-word robustness, on the two existing verifiers.
+     `src/xsql/verify_local.py` reads P(Yes)/(P(Yes)+P(No)) off the next-token
+     logits of a forced-choice prompt. The open question is whether the 12-23%
+     flip rate is an artifact of the verdict tokens "Yes"/"No". This re-scores
+     with the prompt's final line changed to "Answer with a single word,
+     CORRECT or INCORRECT."; everything else (system message, schema,
+     question, SQL, single greedy forward pass) matches
+     `src/xsql/verify_local.py`. It also probes whether Qwen2.5-7B's ceiling
+     saturation (82% of English scores > 0.99, 10%-risk threshold at
+     0.99999996, which broke isotonic transport in scripts/13_transport.py) is
+     specific to the word "Yes".
 
-  2. DENSE vs SPARSE-MoE, matched within one family, NON-THINKING mode:
+  2. Dense vs sparse-MoE, matched within one family, non-thinking mode:
        Qwen/Qwen3-4B-Instruct-2507          (dense)
        Qwen/Qwen3-30B-A3B-Instruct-2507     (sparse MoE, ~30.5B total / ~3.3B active)
 
-  3. Aya Expanse 8B (CohereLabs/aya-expanse-8b) as a TRAINING-DISTRIBUTION
-     control -- explicitly multilingual post-training, same dense-decoder
+  3. Aya Expanse 8B (CohereLabs/aya-expanse-8b) as a training-distribution
+     control: explicitly multilingual post-training, same dense-decoder
      backbone class as the other verifiers.
 
-EFFICIENCY GATE: none of this re-runs all 84,000 (2 verifiers x 42,000)
-judgments. Everything here scores a prespecified, seeded, database-disjoint
+Efficiency gate: none of this re-runs all 84,000 (2 verifiers x 42,000)
+judgments. Everything scores a prespecified, seeded, database-disjoint
 300-question subset of the existing 1200 items (300 x 5 candidates x 7
-languages = 10,500 scorings/model/condition, deduplicated further by shared
-SQL text -- see the SUBSET cell for the exact, locally-verified counts). A
-model is only a candidate for scaling to the full 1200 if it clears ALL of the
-gate checks printed after it is scored (see GATE_CHECK cell): English AUROC
-< ~0.95, a clear majority of scores not within 1e-6 of {0,1}, enough incorrect
-candidates on both sides of its English threshold, and no missing Yes/No (or
-CORRECT/INCORRECT) probability mass.
+languages = 10,500 scorings per model and condition, deduplicated further by
+shared SQL text; see the SUBSET cell for the counts). A model is a candidate
+for scaling to the full 1200 only if it clears all of the gate checks printed
+after it is scored (see the GATE_CHECK cell): English AUROC below ~0.95, a
+clear majority of scores not within 1e-6 of {0,1}, incorrect candidates on
+both sides of its English threshold, and no missing verdict probability mass.
 
-This notebook reuses the EXISTING items/candidates/labels from `data/big/`
-(upload `items.jsonl` and `candidates.jsonl` to Drive `MyDrive/xsql_out/` --
-they are already there from the original `build_colab_notebook.py` run) and
-only re-scores. It never regenerates SQL, which would silently break
-comparability with the established results.
+The notebook reuses the existing items/candidates/labels from `data/big/`
+(upload `items.jsonl` and `candidates.jsonl` to Drive `MyDrive/xsql_out/`) and
+only re-scores. It never regenerates SQL, which would break comparability with
+the established results.
 
-This script only emits the notebook; it does not run the GPU job. Validation
-(subset reproducibility/disjointness against the real data/big files, example
-prompts under both label schemes, ast.parse of every code cell, a re-read text
-audit) is done separately and reported back in the task's final summary, not
-embedded here -- mirroring how `scripts/build_mitigation_notebook.py` and its
-sibling validator are split.
+This script only emits the notebook; it does not run the GPU job.
 """
 
 from __future__ import annotations
@@ -71,60 +63,57 @@ so far only shown to replicate at the *model-family* level. This notebook adds:
 | # | addition | verifiers | label scheme(s) | status |
 |---|---|---|---|---|
 | 1 | label-word robustness | Llama-3.1-8B-Instruct, Qwen2.5-7B-Instruct | Yes/No (full 42k already in `data/big/`; this notebook also re-runs it on just the 300-subset as a harness sanity check) **and** CORRECT/INCORRECT (**NEW**, subset only) | cheap, done first |
-| 2 | dense vs sparse-MoE, precision-matched | Qwen3-4B-Instruct-2507 at bf16 AND nf4 (dense), Qwen3-30B-A3B-Instruct-2507 at auto-detected precision (MoE) | Yes/No (**NEW**) | needs gate check before any scale-up; headline contrast is same-precision dense vs MoE, not bf16-dense vs nf4-MoE |
-| 3 | multilingual training-distribution control | CohereLabs/aya-expanse-8b | Yes/No (**NEW**) | needs gate check before any scale-up |
+| 2 | dense vs sparse-MoE, precision-matched | Qwen3-4B-Instruct-2507 at bf16 and nf4 (dense), Qwen3-30B-A3B-Instruct-2507 at auto-detected precision (MoE) | Yes/No (**new**) | needs gate check before any scale-up; headline contrast is same-precision dense vs MoE, not bf16-dense vs nf4-MoE |
+| 3 | multilingual training-distribution control | CohereLabs/aya-expanse-8b | Yes/No (**new**) | needs gate check before any scale-up |
 
 **Why precision-matching matters for item 2.** `Qwen3-30B-A3B-Instruct-2507`
-(~30.5B total params, all resident regardless of the ~3.3B active per token --
+(~30.5B total params, all resident regardless of the ~3.3B active per token;
 see the runtime/VRAM markdown) may not fit in bf16 on the attached GPU and can
 fall back to 4-bit (nf4) quantization. A dense-vs-MoE comparison is only
-interpretable as an ARCHITECTURE effect if both sides run at the SAME
-numerical precision: on this exact workload, batching alone -- a *smaller*
-perturbation than 4-bit quantization -- was measured to shift verifier
-confidences by up to 6e-2, the same magnitude as the cross-lingual decision
-flips this whole study is about. A bf16-dense-vs-4bit-MoE comparison would
-confound architecture with precision and the resulting number would not mean
-what it looks like it means. So this notebook:
+interpretable as an architecture effect if both sides run at the same
+numerical precision: on this workload, batching alone, a smaller perturbation
+than 4-bit quantization, shifts verifier confidences by up to 6e-2, the same
+magnitude as the cross-lingual decision flips this study is about. A
+bf16-dense-vs-4bit-MoE comparison would confound architecture with precision.
+So this notebook:
 - scores the dense model, `Qwen3-4B-Instruct-2507`, at **both** bf16 and nf4
-  (`qwen3-4b-bf16`, `qwen3-4b-nf4`) -- required for precision-matching, and
-  also a free, independently useful result: how much does quantization ALONE
-  perturb cross-lingual decision consistency, architecture held fixed?
-- auto-detects whichever precision the MoE model actually runs at (bf16 if
-  the GPU has >= 65GB, else nf4), and prints an explicit
+  (`qwen3-4b-bf16`, `qwen3-4b-nf4`). This is required for precision-matching
+  and is also an independently useful result: how much quantization alone
+  perturbs cross-lingual decision consistency, architecture held fixed.
+- auto-detects whichever precision the MoE model runs at (bf16 if the GPU has
+  >= 65GB, else nf4), and prints an explicit
   **`ACTIVE PRECISION-MATCHED COMPARISON`** line naming which dense run is the
-  correct architecture-only comparator for that MoE run. See the RUN_DENSE_MOE
-  cell.
+  architecture-only comparator for that MoE run. See the RUN_DENSE_MOE cell.
 
 **Both Qwen3-Instruct-2507 checkpoints are non-thinking-only releases** (unlike
 the hybrid `Qwen3-*-Base`/plain `Qwen3-*` checkpoints, which support an
 `enable_thinking` toggle and default to reasoning mode). The `-Instruct-2507`
-suffix specifically denotes the non-thinking variant per the model cards; their
-tokenizer chat templates do not emit `<think>` scaffolding and there is no
-`enable_thinking` argument to set. We rely on that documented default rather
-than on any local verification (no GPU here) --- **the RUN_CHECKS cell below
-asserts the tokenizer output contains no `<think>` token before any scoring
-happens, and aborts loudly if it does**, so a wrong assumption fails fast
-instead of silently contaminating scores with reasoning-mode behavior.
+suffix denotes the non-thinking variant per the model cards; their tokenizer
+chat templates do not emit `<think>` scaffolding and there is no
+`enable_thinking` argument to set. The notebook relies on that documented
+default, and **the RUN_CHECKS cell asserts the tokenizer output contains no
+`<think>` token before any scoring happens**, so a wrong assumption fails fast
+instead of contaminating scores with reasoning-mode behavior.
 
 **Efficiency gate.** Every scoring condition here runs on a single
 prespecified, seeded, **database-disjoint** 300-question subset of the
 existing 1200 items in `data/big/items.jsonl` (see the SUBSET cell for the
-selection rule and locally-verified counts: 300 items / 39 databases / 1500
-candidates / 79.4% correct, matching the full set's 81.6%). A new verifier is
-only a candidate for scaling to the full 1200 if it clears the printed GATE
-CHECK: English AUROC below ~0.95, a clear majority of scores NOT within 1e-6
-of {0,1}, a nonzero count of incorrect candidates on both sides of its English
-threshold, and zero missing Yes/No (or CORRECT/INCORRECT) probability mass.
+selection rule and counts: 300 items / 39 databases / 1500 candidates / 79.4%
+correct, matching the full set's 81.6%). A new verifier is a candidate for
+scaling to the full 1200 only if it clears the printed GATE CHECK: English
+AUROC below ~0.95, a clear majority of scores not within 1e-6 of {0,1}, a
+nonzero count of incorrect candidates on both sides of its English threshold,
+and zero missing Yes/No (or CORRECT/INCORRECT) probability mass.
 
 **This notebook reuses the existing items/candidates/labels from the `big`
-run.** Upload `items.jsonl` and `candidates.jsonl` from `data/big/` on your
-machine to `My Drive/xsql_out/` before running (see the LOAD cell). It never
-regenerates SQL.
+run.** Upload `items.jsonl` and `candidates.jsonl` from `data/big/` to
+`My Drive/xsql_out/` before running (see the LOAD cell). It never regenerates
+SQL.
 
 **Runtime and VRAM:** see the final markdown cell. The MoE model
-(`Qwen3-30B-A3B-Instruct-2507`) needs the FULL ~30.5B parameters resident in
-VRAM regardless of the ~3.3B active per token -- in bf16 that is ~61GB of
-weights alone, which will NOT fit on an A100-40GB. Read the runtime cell
+(`Qwen3-30B-A3B-Instruct-2507`) needs the full ~30.5B parameters resident in
+VRAM regardless of the ~3.3B active per token; in bf16 that is ~61GB of
+weights alone, which will not fit on an A100-40GB. Read the runtime cell
 before starting that model.
 """
 
@@ -147,39 +136,32 @@ login(token)
 """
 
 CONFIG = '''# Mirrors src/xsql/config.py and scripts/build_colab_notebook.py's CONFIG cell
-# so scoring internals are byte-identical to the already-done big run wherever
-# unchanged (schema DDL derivation, execution-match labeling rule).
+# so schema DDL derivation and the execution-match rule match the big run.
 REPO_ID  = "dreamerdeo/multispider"
 VARIANT  = "with_english_value"   # with_original_value localizes question literals
-                                   # but leaves gold SQL in English -- breaks the paired design.
+                                   # but leaves gold SQL in English, breaking the paired design.
 LANGUAGES = ["en", "de", "es", "fr", "ja", "vi", "zh"]
 PIVOT     = "en"
 
-# --- Verifiers -------------------------------------------------------------
 # Group 1: existing verifiers. CORRECT/INCORRECT is the new condition; Yes/No
-# is also re-run here on just the 300-subset (cheap) as a harness sanity check
-# against the full-scale data/big/scores_big-*.jsonl numbers, not because the
-# original Yes/No scoring needs replacing.
+# is also re-run on the 300-subset as a harness check against the full-scale
+# data/big/scores_big-*.jsonl numbers.
 EXISTING_VERIFIERS = {
     "llama8b": "meta-llama/Llama-3.1-8B-Instruct",
     "qwen7b":  "Qwen/Qwen2.5-7B-Instruct",
 }
-# Group 2: dense vs sparse-MoE, matched family, both non-thinking (see intro
-# markdown -- the -Instruct-2507 suffix specifically denotes non-thinking).
+# Group 2: dense vs sparse-MoE, matched family, both non-thinking (the
+# -Instruct-2507 suffix denotes the non-thinking variant).
 #
-# PRECISION MATCHING (see intro markdown "Why precision-matching" cell for the
-# full argument): Qwen3-30B-A3B may not fit in bf16 on the attached GPU (see
-# MOE_MIN_BF16_GB below), so it may end up scored in 4-bit (nf4). A dense-vs-MoE
-# contrast is only interpretable as an ARCHITECTURE effect if both sides are at
-# the SAME numerical precision -- batching alone (a far smaller perturbation
-# than 4-bit quantization) was measured to shift confidences by up to 6e-2 on
-# this exact workload, the same magnitude as the cross-lingual effects under
-# study, so bf16-vs-4bit noise could swamp or masquerade as an architecture
-# effect. This notebook therefore scores the DENSE model at BOTH precisions
-# (qwen3-4b-bf16, qwen3-4b-nf4) and, once the MoE's actual precision is known
-# at runtime, treats the dense run at that SAME precision as the headline
-# comparator. See the RUN_DENSE_MOE cell for the explicit branch and printed
-# "ACTIVE PRECISION-MATCHED COMPARISON" line.
+# Precision matching: Qwen3-30B-A3B may not fit in bf16 on the attached GPU
+# (see MOE_MIN_BF16_GB), so it may be scored in 4-bit (nf4). A dense-vs-MoE
+# contrast is only interpretable as an architecture effect if both sides run at
+# the same numerical precision: batching alone, a smaller perturbation than
+# 4-bit quantization, shifts confidences by up to 6e-2 on this workload, the
+# same magnitude as the cross-lingual effects under study. The dense model is
+# therefore scored at both precisions (qwen3-4b-bf16, qwen3-4b-nf4), and the
+# dense run at the MoE's runtime precision is the headline comparator. See the
+# RUN_DENSE_MOE cell.
 DENSE_MODEL_ID = "Qwen/Qwen3-4B-Instruct-2507"
 MOE_MODEL_ID   = "Qwen/Qwen3-30B-A3B-Instruct-2507"
 MOE_MIN_BF16_GB = 65.0   # ~61GB of bf16 weights + headroom for activations/KV cache
@@ -199,7 +181,7 @@ except Exception:
     DRIVE = pathlib.Path("/content/out_local")
     DRIVE.mkdir(exist_ok=True, parents=True)
 
-SOURCE_DIR = DRIVE / "xsql_out"                  # where the ORIGINAL run wrote items/candidates/scores
+SOURCE_DIR = DRIVE / "xsql_out"                  # where the original run wrote items/candidates/scores
 OUT = DRIVE / "xsql_architecture_out"            # this notebook's own outputs, kept separate
 OUT.mkdir(exist_ok=True, parents=True)
 print("source:", SOURCE_DIR)
@@ -233,7 +215,7 @@ items_path = SOURCE_DIR / "items.jsonl"
 cand_path  = SOURCE_DIR / "candidates.jsonl"
 assert items_path.exists() and cand_path.exists(), (
     "items.jsonl / candidates.jsonl not found on Drive. Upload data/big/items.jsonl "
-    "and data/big/candidates.jsonl to My Drive/xsql_out/ before running this notebook -- "
+    "and data/big/candidates.jsonl to My Drive/xsql_out/ before running this notebook; "
     "this run must reuse the existing SQL/labels, never regenerate them."
 )
 all_items = [json.loads(l) for l in items_path.open()]
@@ -242,24 +224,20 @@ print(f"loaded from Drive: {len(all_items)} items, {len(all_cands)} candidates")
 BY_IDX_ALL = {i["idx"]: i for i in all_items}
 '''
 
-SUBSET = '''# Prespecified, seeded, DATABASE-DISJOINT 300-question subset of the 1200
-# items (efficiency gate: 300 x 5 candidates x 7 languages = 10,500 scorings
-# per model/label-scheme instead of 42,000).
+SUBSET = '''# Prespecified, seeded, database-disjoint 300-question subset of the 1200
+# items (300 x 5 candidates x 7 languages = 10,500 scorings per model and
+# label scheme instead of 42,000).
 #
-# "Database-disjoint" here means: databases are sampled first (not
-# individual items), and every database that is included contributes ALL of
-# its items in data/big/items.jsonl -- no database is ever split between
-# "in the subset" and "not in the subset". This keeps the subset compatible
-# with the same fit/test database-disjoint-split methodology used by
-# scripts/12_decision_analysis.py and scripts/13_transport.py (a threshold
-# fit on half the subset's databases and evaluated on the other half never
-# leaks a partially-seen database across the split), and makes the subset
-# itself independently reproducible from nothing but this seed.
+# Databases are sampled first, not individual items, and every included
+# database contributes all of its items in data/big/items.jsonl. This keeps
+# the subset compatible with the fit/test database-disjoint split used by
+# scripts/12_decision_analysis.py and scripts/13_transport.py (a threshold fit
+# on half the subset's databases and evaluated on the other half never sees a
+# partially included database), and makes the subset reproducible from the
+# seed alone.
 #
-# Locally verified against the real data/big files (scripts/14_architecture.py
-# reruns this exact function and asserts the same counts):
-#   300 items, 39 databases, 1500 candidates, 79.4% correct
-#   (full 1200-item set: 81.6% correct -- the subset is representative).
+# Against the data/big files this selects 300 items, 39 databases, 1500
+# candidates, 79.4% correct (full 1200-item set: 81.6% correct).
 SUBSET_SEED = 20260728
 N_TARGET = 300
 
@@ -291,21 +269,20 @@ ncorr = sum(c["correct"] for c in records)
 print(f"subset: {len(chosen)} items across {len(chosen_dbs)} databases, "
       f"{len(records)} candidates, {ncorr}/{len(records)} = {ncorr/len(records):.1%} correct")
 assert len(chosen) == N_TARGET, f"expected exactly {N_TARGET} items, got {len(chosen)}"
-# Disjointness check: every chosen database's FULL item set must be present.
+# Disjointness check: every chosen database's full item set must be present.
 by_db_full = {}
 for it in all_items: by_db_full.setdefault(it["db_id"], []).append(it["idx"])
 for d in chosen_dbs:
     on_disk = set(by_db_full[d])
     in_subset = {it["idx"] for it in chosen if it["db_id"] == d}
-    assert on_disk == in_subset, f"database {d} only partially included -- selection bug"
+    assert on_disk == in_subset, f"database {d} only partially included: selection bug"
 print("database-disjointness check passed: every included database is fully included")
 '''
 
-PROMPTS = '''# Two label-word schemes for the SAME forced-choice-logprob mechanism as
+PROMPTS = '''# Two label-word schemes for the same forced-choice-logprob mechanism as
 # src/xsql/verify_local.py: P(verdict-A) / (P(verdict-A) + P(verdict-B)) off
-# the next-token logits of a single greedy forward pass. Nothing else in the
-# prompt changes between schemes -- only the final instruction line and the
-# surface-form token lists.
+# the next-token logits of a single greedy forward pass. Only the final
+# instruction line and the surface-form token lists differ between schemes.
 VER_SYSTEM = ("You are a meticulous database engineer auditing text-to-SQL output. "
               "You judge whether a candidate SQLite query correctly answers a user's "
               "question against a given schema. The question may be written in any "
@@ -337,12 +314,9 @@ TEMPLATES = {"yesno": VER_TEMPLATE_YESNO, "correctincorrect": VER_TEMPLATE_CI}
 
 YES_FORMS = ["Yes", " Yes", "yes", " yes", "YES", "Y"]
 NO_FORMS  = ["No", " No", "no", " no", "NO", "N"]
-# Deliberately NOT including single-letter "C"/"I" abbreviations here: "I" is
-# an extremely common token (the pronoun) in English text and would inflate
-# INCORRECT's probability mass for reasons that have nothing to do with the
-# verdict, unlike "Y"/"N" which are conventional Yes/No abbreviations. This is
-# an intentional asymmetry with YES_FORMS/NO_FORMS, documented rather than
-# silently copied.
+# No single-letter "C"/"I" abbreviations, unlike "Y"/"N" above: "I" is a very
+# common token (the pronoun) and would inflate INCORRECT's probability mass
+# for reasons unrelated to the verdict.
 CORRECT_FORMS   = ["Correct", " Correct", "correct", " correct", "CORRECT"]
 INCORRECT_FORMS = ["Incorrect", " Incorrect", "incorrect", " incorrect", "INCORRECT"]
 VERDICT_FORMS = {
@@ -353,7 +327,7 @@ VERDICT_FORMS = {
 def first_ids(tok, forms):
     return sorted({tok.encode(f, add_special_tokens=False)[0] for f in forms if tok.encode(f, add_special_tokens=False)})
 
-# Quick sanity print, human-eyeball-able (data/big real schema + real candidate).
+# Print one real prompt under each scheme for inspection.
 _demo_item = chosen[0]
 _demo_cand = next(c for c in records if c["item_idx"] == _demo_item["idx"])
 _demo_schema = schema_ddl(_demo_item["db_id"])
@@ -364,41 +338,38 @@ print("--- CORRECT/INCORRECT prompt ---")
 print(VER_TEMPLATE_CI.format(schema=_demo_schema, question=_demo_item["questions"]["en"], sql=_demo_cand["sql"]))
 '''
 
-RUN_CHECKS = '''# Fails loudly (rather than silently scoring garbage) if a new model tokenizes
-# the verdict words in a way that collides between classes, or if a Qwen3
-# checkpoint turns out to emit <think> scaffolding despite the -Instruct-2507
-# non-thinking documentation this notebook relies on (see intro markdown).
+RUN_CHECKS = '''# Fail before scoring if a model tokenizes the verdict words in a way that
+# collides between classes, or if a Qwen3 checkpoint emits <think> scaffolding
+# despite the -Instruct-2507 non-thinking documentation this notebook relies on.
 
 def assert_no_token_collision(tok, label_scheme):
     pos_forms, neg_forms = VERDICT_FORMS[label_scheme]
     pos_ids, neg_ids = first_ids(tok, pos_forms), first_ids(tok, neg_forms)
     overlap = set(pos_ids) & set(neg_ids)
-    assert not overlap, f"{label_scheme} verdict token ids collide: {overlap} -- tokenizer-specific, check surface forms"
+    assert not overlap, f"{label_scheme} verdict token ids collide: {overlap}; tokenizer-specific, check surface forms"
     return pos_ids, neg_ids
 
 def assert_non_thinking(tok, model_id):
-    """Cheap, no-GPU-forward-pass check: render the chat template and make sure
-    it doesn't itself inject <think> scaffolding by default. This cannot prove
-    the MODEL won't reason internally, but it does verify our reliance on the
-    documented non-thinking default isn't contradicted by the tokenizer's own
-    template, and it costs nothing extra."""
+    """Render the chat template and check that it does not inject <think>
+    scaffolding by default. This does not prove the model will not reason
+    internally, but it catches a tokenizer template that contradicts the
+    documented non-thinking default, at no GPU cost."""
     rendered = tok.apply_chat_template(
         [{"role": "user", "content": "placeholder"}], tokenize=False, add_generation_prompt=True)
     assert "<think>" not in rendered, (
-        f"{model_id}: chat template emitted <think> -- this checkpoint may not be the "
+        f"{model_id}: chat template emitted <think>; this checkpoint may not be the "
         f"non-thinking variant this notebook assumes. Stop and re-check the model card.")
     print(f"  {model_id}: non-thinking template check passed")
 '''
 
-VERIFY_HARNESS = '''# One resumable scorer shared by every (verifier, label_scheme) condition in
-# this notebook. Same dedup + batch-1 discipline as the original big run:
-# identical (db_id, sql, question, label_scheme) quadruples score identically,
-# so unique forward passes are computed once and fanned out; batch size is 1
-# because batched bf16 forward passes are not numerically identical to
-# unbatched ones on this workload (up to 6e-2 drift, the same magnitude as the
-# effects under study). RESUMABLE: raw per-unique-key results are appended to
-# Drive as they are computed and reloaded on restart, so a disconnect costs at
-# most the in-flight forward pass.
+VERIFY_HARNESS = '''# One resumable scorer shared by every (verifier, label_scheme) condition.
+# Same dedup and batch-1 discipline as the big run: identical (db_id, sql,
+# question, label_scheme) quadruples score identically, so unique forward
+# passes are computed once and fanned out. Batch size is 1 because batched
+# bf16 forward passes are not numerically identical to unbatched ones on this
+# workload (up to 6e-2 drift, the same magnitude as the effects under study).
+# Raw per-unique-key results are appended to Drive as they are computed and
+# reloaded on restart, so a disconnect costs at most the in-flight forward pass.
 BATCH = 1
 SCHEMAS = {d: schema_ddl(d) for d in {r["db_id"] for r in records}}
 
@@ -414,11 +385,10 @@ def build_jobs(label_scheme):
     return jobs
 
 def load_model_precision(model_id, precision):
-    """Force-load `model_id` at exactly `precision` ("bf16" or "nf4") -- no
-    auto-fallback inside this function. The CALLER decides precision
-    explicitly (see RUN_DENSE_MOE), so which numerical precision every score
-    file was produced at is always visible in the run log and in the
-    verifier's own name, never silently decided deep in a helper."""
+    """Load `model_id` at exactly `precision` ("bf16" or "nf4"), with no
+    fallback. The caller chooses the precision (see RUN_DENSE_MOE), so the
+    precision each score file was produced at is visible in the run log and
+    in the verifier's name."""
     tok = AutoTokenizer.from_pretrained(model_id)
     if precision == "bf16":
         model = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.bfloat16, device_map="cuda").eval()
@@ -491,12 +461,12 @@ def run_verifier(name, model_id, label_scheme, precision="bf16"):
     return out
 '''
 
-GATE_CHECK = '''# Printed after every NEW model/condition. This gate governs expansion beyond
-# the two primary verifiers only; it was not applied to them. Note that the
-# primary Qwen2.5-7B verifier would NOT pass the saturation check (60.8% of
-# its full-corpus English scores lie within 1e-6 of an endpoint), so the gate
-# is a screen for additional models, not a criterion the primary results meet.
-# A model is a scale-up CANDIDATE only if ALL FOUR checks pass.
+GATE_CHECK = '''# Printed after every new model/condition. The gate governs expansion beyond
+# the two primary verifiers only; it was not applied to them. The primary
+# Qwen2.5-7B verifier would not pass the saturation check (60.8% of its
+# full-corpus English scores lie within 1e-6 of an endpoint), so the gate is a
+# screen for additional models, not a criterion the primary results meet.
+# A model is a scale-up candidate only if all four checks pass.
 from sklearn.metrics import roc_auc_score
 import numpy as np
 
@@ -511,10 +481,10 @@ def gate_check(name, label_scheme, scores):
     sat_frac = float(((np.abs(confs[valid]) < 1e-6) | (np.abs(1 - confs[valid]) < 1e-6)).mean())
     not_saturated = sat_frac < 0.5
 
-    # Enough incorrect candidates on both sides of the (English, this-scheme's
-    # own) risk-feasible threshold. Mirrors threshold_at_risk in
-    # src/xsql/metrics.py at target risk 0.10, computed inline to avoid an
-    # extra import dependency inside the Colab runtime.
+    # Incorrect candidates must appear on both sides of this scheme's own
+    # English risk-feasible threshold. Mirrors threshold_at_risk in
+    # src/xsql/metrics.py at target risk 0.10, inlined so the Colab runtime
+    # does not need the xsql package.
     def threshold_at_risk(labels, scores, target_risk=0.10):
         best = None
         for t in np.unique(scores)[::-1]:
@@ -548,12 +518,11 @@ def gate_check(name, label_scheme, scores):
     return all_pass
 '''
 
-RUN_LABEL_WORD = '''# --- Item 1: label-word robustness on the two EXISTING verifiers ----------
+RUN_LABEL_WORD = '''# Item 1: label-word robustness on the two existing verifiers.
 # yesno scores for these two verifiers already exist in full at data/big/
-# scores_big-{llama8b,qwen7b}.jsonl; only correctincorrect is new here. We
-# additionally re-run yesno on just the 300-subset as a byte-for-byte sanity
-# check that this notebook's harness reproduces the original scores before
-# trusting the new correctincorrect numbers next to them.
+# scores_big-{llama8b,qwen7b}.jsonl; only correctincorrect is new here. yesno
+# is re-run on the 300-subset as a check that this harness reproduces the
+# original scores before the new correctincorrect numbers are read next to them.
 for name, model_id in EXISTING_VERIFIERS.items():
     for label_scheme in LABEL_SCHEMES:
         out_name = OUT / f"scores_architecture_{label_scheme}-{name}.jsonl"
@@ -564,15 +533,13 @@ for name, model_id in EXISTING_VERIFIERS.items():
         gate_check(name, label_scheme, scores)
 '''
 
-RUN_DENSE_MOE = '''# --- Item 2: dense vs sparse-MoE, same family, non-thinking, Yes/No only,
-# PRECISION-MATCHED (see intro markdown "Why precision-matching matters") ---
+RUN_DENSE_MOE = '''# Item 2: dense vs sparse-MoE, same family, non-thinking, Yes/No only,
+# precision-matched (see the intro markdown).
 #
-# Step 1: score the dense model at BOTH precisions. This is not optional --
-# it is what makes the eventual dense-vs-MoE contrast interpretable as an
-# architecture effect rather than a numerical-precision artifact -- and it is
-# also a free, independently reportable result: how much does 4-bit
-# quantization ALONE (architecture held fixed) perturb cross-lingual decision
-# consistency?
+# Step 1: score the dense model at both precisions. This makes the dense-vs-MoE
+# contrast interpretable as an architecture effect rather than a precision
+# artifact, and the bf16-vs-nf4 pair is a separate result on its own: how much
+# 4-bit quantization alone perturbs cross-lingual decision consistency.
 dense_scores = {}
 for precision in ["bf16", "nf4"]:
     name = f"qwen3-4b-{precision}"
@@ -584,10 +551,9 @@ for precision in ["bf16", "nf4"]:
     gate_check(name, "yesno", scores)
     dense_scores[precision] = scores
 
-# Step 2: auto-detect the precision the MoE model will actually run at on
-# THIS GPU (bf16 needs ~61GB of weights resident; see MOE_MIN_BF16_GB above),
-# and print, in plain text, exactly which dense run is the correct
-# same-precision comparator. Never silently compare across precisions.
+# Step 2: detect the precision the MoE model will run at on this GPU (bf16
+# needs ~61GB of weights resident; see MOE_MIN_BF16_GB) and print which dense
+# run is the same-precision comparator.
 free_gb = torch.cuda.get_device_properties(0).total_memory / 1e9 if torch.cuda.is_available() else 0
 moe_precision = "bf16" if free_gb >= MOE_MIN_BF16_GB else "nf4"
 moe_name = f"qwen3-30ba3b-moe-{moe_precision}"
@@ -599,7 +565,7 @@ if moe_precision == "nf4":
     print("  bf16 did not fit on this GPU. If an A100-80GB/H100 is available, rerun this "
           "cell there instead to get the (preferred) bf16-vs-bf16 comparison.")
 else:
-    print("  bf16 fit on this GPU -- using the preferred bf16-vs-bf16 comparison.")
+    print("  bf16 fit on this GPU; using the preferred bf16-vs-bf16 comparison.")
 
 out_name = OUT / f"scores_architecture_yesno-{moe_name}.jsonl"
 if out_name.exists():
@@ -609,12 +575,12 @@ else:
 gate_check(moe_name, "yesno", moe_scores)
 
 print(f"\\nFor the architecture-only contrast in scripts/14_architecture.py, compare "
-      f"'{active_dense_name}' against '{moe_name}' (both {moe_precision}). The OTHER dense "
+      f"'{active_dense_name}' against '{moe_name}' (both {moe_precision}). The other dense "
       f"precision (qwen3-4b-{'nf4' if moe_precision == 'bf16' else 'bf16'}) is kept only for "
       f"the separate quantization-only comparison against qwen3-4b-{moe_precision}.")
 '''
 
-RUN_CONTROL = '''# --- Item 3: multilingual training-distribution control, Yes/No only ------
+RUN_CONTROL = '''# Item 3: multilingual training-distribution control, Yes/No only.
 for name, model_id in CONTROL_VERIFIERS.items():
     out_name = OUT / f"scores_architecture_yesno-{name}.jsonl"
     if out_name.exists():
@@ -635,45 +601,43 @@ files.download("/content/xsql_architecture_results.zip")
 MD_RUNTIME = """## Runtime estimate, VRAM requirements, and caveats
 
 **Volume per (model, label-scheme) condition.** 300 items x 5 candidates x 7
-languages = 10,500 scorings. Locally verified against the real
-`data/big/candidates.jsonl` (see the SUBSET cell numbers and
-`scripts/14_architecture.py`'s reproduction of the same selection): the 300
-items carry 1500 candidates, and deduplicating identical `(db_id, sql,
-question)` triples across the 7 languages collapses 1500 x 7 = 10,500
-scorings to **5,610 unique forward passes** per condition (~46% dedup, in
-line with the ~48% figure from the original 6000-candidate run).
+languages = 10,500 scorings. Against `data/big/candidates.jsonl` (see the
+SUBSET cell numbers), the 300 items carry 1500 candidates, and deduplicating
+identical `(db_id, sql, question)` triples across the 7 languages collapses
+1500 x 7 = 10,500 scorings to **5,610 unique forward passes** per condition
+(~46% dedup, in line with the ~48% figure from the original 6000-candidate
+run).
 
 **Item 1 (label-word robustness).** 2 verifiers x 1 new label scheme
-(correctincorrect; yesno is reused from `data/big/`, plus one sanity
+(correctincorrect; yesno is reused from `data/big/`, plus one check
 re-run on the subset) = at most 2 x 2 x 5,610 ~= 22,440 forward passes.
 At tens of milliseconds per batch-1 forward pass on an A100 (the same rate
 observed in the original big run), this is well under an hour of pure compute;
 wall-clock with tokenization/schema-lookup overhead should be under an hour.
 
-**Item 2 (dense vs MoE, precision-matched).** The dense model is now scored
-TWICE -- `qwen3-4b-bf16` and `qwen3-4b-nf4` -- so 3 forward-pass runs total
+**Item 2 (dense vs MoE, precision-matched).** The dense model is scored
+twice (`qwen3-4b-bf16` and `qwen3-4b-nf4`), so 3 forward-pass runs total
 (2 dense precisions + 1 MoE run at its auto-detected precision) x 1 label
-scheme x 5,610 = **16,830 forward passes**, roughly 50% more than the earlier
-single-precision design. `qwen3-4b-bf16` is comparable in cost to the existing
+scheme x 5,610 = **16,830 forward passes**. `qwen3-4b-bf16` is comparable in cost to the existing
 7-8B verifiers; `qwen3-4b-nf4` is a similar number of forward passes but with
 extra quantization/dequantization overhead per step, typically somewhat slower
 wall-clock despite the smaller weight footprint. **Qwen3-30B-A3B-Instruct-2507
 is the VRAM outlier**: it has ~30.5B total parameters, and because
 Mixture-of-Experts routing selects a different ~3.3B-parameter subset per
-token, ALL experts must stay resident in VRAM -- the ~3.3B "active" figure
+token, all experts must stay resident in VRAM; the ~3.3B "active" figure
 describes compute per token, not memory footprint. In bf16 that is roughly
-61GB of weights alone, before activations or KV cache, which will NOT fit on
+61GB of weights alone, before activations or KV cache, which will not fit on
 a standard Colab A100-40GB.
 
 The RUN_DENSE_MOE cell auto-detects available VRAM (`MOE_MIN_BF16_GB = 65`)
 and picks the MoE's precision accordingly, then prints an explicit
 `ACTIVE PRECISION-MATCHED COMPARISON: qwen3-4b-{precision} vs
 qwen3-30ba3b-moe-{precision}` line naming the correct same-precision
-comparator -- **the dense-vs-MoE architecture claim must only ever use that
-pair, never the opposite-precision dense run.** On a 40GB A100 this will read
+comparator. **The dense-vs-MoE architecture claim must only use that pair,
+never the opposite-precision dense run.** On a 40GB A100 this will read
 nf4 vs nf4 (comparable weight footprints of ~2GB dense / ~16-20GB MoE); the
-`qwen3-4b-bf16` run still happens regardless, purely to supply the
-quantization-only comparison (see next paragraph) and because it's cheap.
+`qwen3-4b-bf16` run still happens regardless, to supply the quantization-only
+comparison (see next paragraph), and it is cheap.
 **If an A100-80GB, H100, or similar is available, rerun the RUN_DENSE_MOE
 cell there** to get the preferred bf16-vs-bf16 architecture comparison instead
 of nf4-vs-nf4.
@@ -692,20 +656,19 @@ params, comparable footprint to Llama-3.1-8B) x 1 label scheme x 5,610 =
 
 **Total estimate: roughly 2.5-5h on an A100-40GB** for items 1 and 3 plus all
 three item-2 runs (two dense precisions + one MoE run at its auto-detected
-precision) -- about 30-60 minutes more than the earlier single-precision
-design because of the extra `qwen3-4b-nf4` pass, plus first-load download time
-for each model's weights on top of compute (~61GB for MoE-bf16 or ~16-20GB
-for MoE-nf4, on top of the dense model's own bf16 + nf4 downloads).
+precision), plus first-load download time for each model's weights on top of
+compute (~61GB for MoE-bf16 or ~16-20GB for MoE-nf4, on top of the dense
+model's own bf16 + nf4 downloads).
 
 **Known residual risks this notebook could not eliminate:**
 - The `<think>`-token template check in `assert_non_thinking` verifies the
   tokenizer's own default template, not the model's runtime behavior --
   it cannot fully rule out latent reasoning-mode behavior in edge cases.
 - If the attached GPU cannot fit the MoE in bf16, the headline dense-vs-MoE
-  contrast runs at nf4 for both sides, which is precision-matched (the bug
-  this revision fixes) but still not bf16 -- absolute confidence values for
-  that pair should be read with the same caution as any 4-bit run, even
-  though the ARCHITECTURE comparison itself is now valid.
+  contrast runs at nf4 for both sides, which is precision-matched but still
+  not bf16. Absolute confidence values for that pair should be read with the
+  same caution as any 4-bit run, even though the architecture comparison
+  itself is valid.
 - Aya Expanse 8B and the Qwen3 family may use different tokenizers whose
   Yes/No or CORRECT/INCORRECT first-token segmentation differs in ways the
   `assert_no_token_collision` check catches for COLLISIONS but not for

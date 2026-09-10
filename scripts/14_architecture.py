@@ -8,32 +8,28 @@ Consumes:
     300-item database-disjoint subset; label_scheme in {yesno, correctincorrect};
     verifier in {llama8b, qwen7b, qwen3-4b-dense, qwen3-30ba3b-moe, aya-expanse-8b})
 
-Every discovered (verifier, label_scheme) dataset is analyzed with the SAME
-methodology as scripts/12_decision_analysis.py and scripts/13_transport.py so
-numbers are directly comparable to the established results: fit an English
-threshold at TARGET_RISK on a database-disjoint half of the item pool, apply
-it UNCHANGED to every language on the other half, and report what that does
-to individual execute/defer decisions on identical SQL.
+Every discovered (verifier, label_scheme) dataset is analyzed with the same
+methodology as scripts/12_decision_analysis.py and scripts/13_transport.py, so
+numbers are directly comparable: fit an English threshold at TARGET_RISK on a
+database-disjoint half of the item pool, apply it unchanged to every language
+on the other half, and report what that does to individual execute/defer
+decisions on identical SQL.
 
-This script is designed to run TODAY against only the two existing `big`
-score files (before any new architecture data exists) as a correctness check:
-it should reproduce the known headline numbers (Llama-3.1-8B mean flips
-~14.2%, Qwen2.5-7B mean flips ~19.7%, both Yes/No, full 1200 items) using the
-identical seed=0 database split scripts/12_decision_analysis.py uses. Any new
-`data/architecture/*.jsonl` files found are analyzed the same way and appended
-to the same report, so re-running this script after the notebook produces new
-data requires no code changes.
+Run against only the two `big` score files, the script reproduces the headline
+numbers (Llama-3.1-8B mean flips ~14.2%, Qwen2.5-7B mean flips ~19.7%, both
+Yes/No, full 1200 items) using the seed=0 database split of
+scripts/12_decision_analysis.py. Any `data/architecture/*.jsonl` files found
+are analyzed the same way and appended to the same report.
 
 Per (verifier, label_scheme) this reports: English AUROC, saturation fraction
 (share of English scores within 1e-6 of {0,1}), mean decision-flip rate vs
 English (with a database-clustered bootstrap 95% CI), unsafe-promotion rate
-(incorrect SQL promoted into execution, Clopper-Pearson 95% CI -- a percentile
-bootstrap collapses to [0,0] whenever zero events are observed and would
-falsely imply a zero population rate), lost-automation rate (correct SQL
-demoted), accepted-set Jaccard overlap vs English, coverage spread across
-languages, and accepted risk per language. Effects that are statistically
-significant (CI excludes the null) but small in absolute magnitude are flagged
-explicitly rather than left to the reader to notice.
+(incorrect SQL promoted into execution, with a Clopper-Pearson 95% CI, since a
+percentile bootstrap collapses to [0,0] whenever zero events are observed),
+lost-automation rate (correct SQL demoted), accepted-set Jaccard overlap vs
+English, coverage spread across languages, and accepted risk per language.
+Effects that are statistically significant but smaller than NEGLIGIBLE_ABS are
+flagged as negligible.
 
 Usage: uv run python scripts/14_architecture.py
 """
@@ -115,7 +111,7 @@ def analyze(name: str, label_scheme: str, path: Path, pretty: str, lines: list[s
     labels, dbs, conf, present_langs = load(path)
     langs_here = [l for l in LANGS if l in present_langs]
 
-    # --- English AUROC + saturation, computed on ALL items (not just the split) ---
+    # English AUROC and saturation are computed on all items, not only the test split.
     en_conf = conf[PIVOT]
     en_valid = ~np.isnan(en_conf)
     en_auroc = auroc_metric(labels[en_valid], en_conf[en_valid])
@@ -132,7 +128,7 @@ def analyze(name: str, label_scheme: str, path: Path, pretty: str, lines: list[s
         "",
         f"**English AUROC:** {en_auroc:.4f}" if en_auroc is not None else "**English AUROC:** undefined (single class)",
         f"  **Saturation fraction (within 1e-6 of 0 or 1):** {sat_frac:.1%} "
-        f"{'-- majority saturated, treat isotonic-style transport with caution' if sat_frac >= 0.5 else '-- not saturated'}",
+        f"{'(majority saturated; treat isotonic-style transport with caution)' if sat_frac >= 0.5 else '(not saturated)'}",
         "",
     ]
 
@@ -143,9 +139,8 @@ def analyze(name: str, label_scheme: str, path: Path, pretty: str, lines: list[s
         lines.append("_Too few databases or a degenerate label distribution for a fit/test split; skipped._\n")
         return
 
-    # --- database-disjoint fit/test split, identical methodology + seed to
-    # scripts/12_decision_analysis.py so the two `big` datasets reproduce the
-    # established numbers exactly. ---
+    # Database-disjoint fit/test split with the same seed as
+    # scripts/12_decision_analysis.py, so the `big` datasets reproduce its numbers.
     uniq = sorted(set(dbs))
     perm = np.random.default_rng(SEED).permutation(uniq)
     fit = set(perm[: len(uniq) // 2])
@@ -166,8 +161,8 @@ def analyze(name: str, label_scheme: str, path: Path, pretty: str, lines: list[s
 
     def cluster_bootstrap_mean(values_by_lang: dict[str, np.ndarray]) -> tuple[float, float]:
         """95% percentile CI on the mean-over-languages flip rate, resampling
-        DATABASES (not candidates) with replacement so within-database
-        correlation doesn't understate the interval."""
+        databases (not candidates) with replacement so within-database
+        correlation does not understate the interval."""
         means = []
         for _ in range(N_BOOT):
             sampled_dbs = rng.choice(uniq_t, len(uniq_t), replace=True)
@@ -223,7 +218,7 @@ def analyze(name: str, label_scheme: str, path: Path, pretty: str, lines: list[s
 
     negligible_note = ""
     if lo > 0 and mean_flip < NEGLIGIBLE_ABS:
-        negligible_note = " (statistically significant but < 1pp -- practically negligible)"
+        negligible_note = " (statistically significant but < 1pp, practically negligible)"
 
     lines += [
         "",
@@ -237,25 +232,21 @@ def analyze(name: str, label_scheme: str, path: Path, pretty: str, lines: list[s
 def analyze_pairwise(
     label_a: str, path_a: Path, label_b: str, path_b: Path, comparison_label: str, lines: list[str]
 ) -> None:
-    """Compare two verifier/precision conditions directly against EACH OTHER
-    (not each against its own English baseline). Used for two comparisons the
-    architecture notebook promises this script will surface explicitly:
+    """Compare two verifier/precision conditions directly against each other
+    rather than each against its own English baseline. Used for two pairs:
 
       - quantization-only: qwen3-4b-bf16 vs qwen3-4b-nf4 (architecture fixed,
-        precision varies) -- isolates how much 4-bit quantization alone
-        perturbs cross-lingual decision consistency.
-      - dense-vs-MoE, precision-matched: qwen3-4b vs qwen3-30ba3b-moe at
-        whichever precision the MoE actually ran at (architecture varies,
-        precision fixed) -- the notebook's "ACTIVE PRECISION-MATCHED
-        COMPARISON" pair.
+        precision varies). Isolates how much 4-bit quantization alone perturbs
+        cross-lingual decision consistency.
+      - dense vs MoE, precision-matched: qwen3-4b vs qwen3-30ba3b-moe at
+        whichever precision the MoE ran at (architecture varies, precision
+        fixed).
 
-    Methodology: fit a threshold on condition A's English scores (database-
-    disjoint fit/test split, identical seed to `analyze`), then apply that
-    SAME threshold to both A and B's scores in every language present in
-    both files, including English itself -- unlike the per-verifier tables,
-    English is included here because the whole point is to isolate the
-    effect of precision/architecture with language held fixed, which is
-    exactly what the English column shows.
+    A threshold is fit on condition A's English scores (database-disjoint
+    fit/test split, same seed as `analyze`), then applied to both A and B in
+    every language present in both files. English is included here, unlike in
+    the per-verifier tables, because the English column isolates the effect of
+    precision or architecture with language held fixed.
     """
     labels_a, dbs_a, conf_a, langs_a = load(path_a)
     labels_b, dbs_b, conf_b, langs_b = load(path_b)
@@ -270,8 +261,8 @@ def analyze_pairwise(
     lines += [f"## Pairwise: {comparison_label}", ""]
     if not ids_match:
         lines.append(
-            "_Candidate sets or labels differ between the two files -- cannot run a "
-            "paired comparison; skipped._\n"
+            "_Candidate sets or labels differ between the two files, so a paired "
+            "comparison is not possible; skipped._\n"
         )
         return
     if not langs_common:
@@ -305,7 +296,7 @@ def analyze_pairwise(
     lines += [
         f"Threshold {thr:.4f} fit on **{label_a}**'s English scores "
         f"({len(fit)}/{len(uniq)} databases, target risk {TARGET_RISK:.0%}), applied "
-        f"UNCHANGED to both **{label_a}** and **{label_b}**. Held-out test split: "
+        f"unchanged to both **{label_a}** and **{label_b}**. Held-out test split: "
         f"{len(lab)} candidates ({n_corr} correct / {n_incorr} incorrect).",
         "",
         "| lang | flip rate (A vs B) | unsafe promoted (95% CI) | lost automation | Jaccard overlap | coverage A | coverage B |",
@@ -350,7 +341,7 @@ def analyze_pairwise(
     lo, hi = cluster_bootstrap_mean(flip_by_lang)
     negligible_note = ""
     if lo > 0 and mean_flip < NEGLIGIBLE_ABS:
-        negligible_note = " (statistically significant but < 1pp -- practically negligible)"
+        negligible_note = " (statistically significant but < 1pp, practically negligible)"
     lines += [
         "",
         f"**Mean flip rate across {len(langs_common)} languages (incl. English): {mean_flip:.1%} "
@@ -360,9 +351,9 @@ def analyze_pairwise(
 
 
 def find_pairwise_comparisons(new_datasets):
-    """Auto-discover the quantization-only and precision-matched dense-vs-MoE
-    pairs from whatever architecture score files are present, so this script
-    needs no edits regardless of which precision the MoE ended up running at."""
+    """Discover the quantization-only and precision-matched dense-vs-MoE pairs
+    from whatever architecture score files are present, whichever precision
+    the MoE ran at."""
     by_name_scheme = {(n, s): p for n, s, p, _ in new_datasets}
     pairs = []
 
@@ -395,7 +386,7 @@ def main() -> None:
         "",
         "One threshold fit on English (database-disjoint half of the item pool),",
         "applied unchanged to every language on the other half. Same SQL, same",
-        "database, same execution-derived label -- only the question's language",
+        "database, same execution-derived label; only the question's language",
         "(and, for the label-word conditions, the verdict tokens shown to the",
         "model) differs, so every flip below is attributable to that alone.",
         "",
@@ -403,7 +394,7 @@ def main() -> None:
         "score files currently exist: the two established `data/big/scores_big-*.jsonl`",
         "files are always included; any `data/architecture/scores_architecture_*.jsonl`",
         "files (written by the notebook from `scripts/build_architecture_notebook.py`)",
-        "are picked up automatically once they exist, with no code changes needed.",
+        "are picked up automatically once they exist.",
         "",
     ]
 
@@ -413,7 +404,7 @@ def main() -> None:
 
     if not new_datasets:
         lines += [
-            "**No `data/architecture/*.jsonl` files found yet** -- this run only",
+            "**No `data/architecture/*.jsonl` files found.** This run only",
             "reproduces the established Yes/No results from `data/big/` as a",
             "correctness check of this script. Re-run after the architecture notebook",
             "has produced new score files.",
@@ -431,13 +422,12 @@ def main() -> None:
         lines += [
             "# Pairwise comparisons: isolating architecture from precision",
             "",
-            "The per-verifier tables above each compare a verifier against ITS OWN",
+            "The per-verifier tables above each compare a verifier against its own",
             "English baseline. The two comparisons below instead compare two",
             "conditions directly against each other, with a threshold fit on the",
-            "first condition's English scores -- this is what actually answers",
-            "\"how much does precision alone matter\" and \"how much does architecture",
-            "alone matter, precision held fixed\", which the per-verifier tables",
-            "cannot show on their own.",
+            "first condition's English scores. This answers how much precision",
+            "alone matters, and how much architecture alone matters with precision",
+            "held fixed, which the per-verifier tables cannot show on their own.",
             "",
         ]
         for label_a, path_a, label_b, path_b, comparison_label in pairwise:

@@ -1,16 +1,13 @@
-"""Reproducibility closer: recompute published numbers that existed in no script.
+"""Recompute statistics cited in the paper directly from data/.
 
-Four statistics cited in the paper were, until now, produced ad hoc (notebook
-cells, one-off REPL sessions) rather than checked into a script anyone could
-rerun. This recomputes each one directly from data/, using the SAME canonical
-protocol as every primary result in this project (scripts/12_decision_analysis.py,
-scripts/13_transport.py, scripts/14_architecture.py, scripts/18_pivot_validation.py):
-163 databases shuffled with `np.random.default_rng(0)`, the first 81
-(floor(163/2)) assigned to calibration and the remaining 82 to test; the
-English threshold is the most permissive value whose selective risk on
-calibration-split English scores stays within a 10% target, evaluated at
-distinct score values only (`xsql.metrics.threshold_at_risk`). Reused directly:
-`threshold_at_risk`, `risk_at_threshold`, `auroc` from `xsql.metrics`.
+Each one uses the canonical protocol shared by the primary results
+(scripts/12_decision_analysis.py, scripts/13_transport.py,
+scripts/14_architecture.py, scripts/18_pivot_validation.py): 163 databases
+shuffled with `np.random.default_rng(0)`, the first 81 (floor(163/2)) assigned
+to calibration and the remaining 82 to test; the English threshold is the most
+permissive value whose selective risk on calibration-split English scores stays
+within a 10% target, evaluated at distinct score values only
+(`xsql.metrics.threshold_at_risk`).
 
 The four numbers:
 
@@ -65,7 +62,7 @@ def quantile_transport(s_cal_lang: np.ndarray, s_cal_en: np.ndarray, s_eval_lang
 
 def canonical_split(dbs: np.ndarray, seed: int = SEED) -> tuple[set[str], set[str]]:
     """163 databases, seed-shuffled, first floor(N/2) to calibration, the rest
-    to test -- the split used everywhere else in this project."""
+    to test: the split used everywhere else in this project."""
     uniq = sorted(set(dbs.tolist()))
     perm = np.random.default_rng(seed).permutation(uniq)
     n_cal = len(uniq) // 2
@@ -118,7 +115,7 @@ def pivot_vs_quantile() -> list[str]:
         "bootstrap. Recomputed here: for each verifier, the per-language flip "
         "rate against the English decision (canonical test split) under "
         "`pivot` (data/mitigation) and under `quantile` (fit on calibration, "
-        "applied to test -- scripts/13_transport.py's method) is averaged over "
+        "applied to test, as in scripts/13_transport.py) is averaged over "
         "the six non-English languages; the same resampled test databases are "
         "then used to evaluate both methods within each bootstrap draw, so the "
         "difference is paired.",
@@ -180,7 +177,7 @@ def quantile_spread_over_seeds() -> list[str]:
         "Section 7.1 reports the per-language quantile rule's coverage spread "
         "(max-min coverage over all seven languages; English is left unmapped) "
         "averaged over ten independent database splits (seeds 0-9). Each seed "
-        "refits the threshold AND the quantile map on that seed's own "
+        "refits the threshold and the quantile map on that seed's own "
         "calibration half and measures coverage (and realized risk, to check "
         "the accompanying claim that risk control is not preserved) on that "
         "seed's own test half.",
@@ -223,7 +220,7 @@ def quantile_spread_over_seeds() -> list[str]:
 
 
 def english_flip(stem_a: str, stem_b: str) -> tuple[float, float]:
-    """Threshold fit on A's English calibration scores, applied UNCHANGED to
+    """Threshold fit on A's English calibration scores, applied unchanged to
     both A's and B's English test scores. Same methodology as
     `analyze_pairwise` in scripts/14_architecture.py, restricted to English."""
     labels, dbs, conf_a, _ = load_arch(stem_a)
@@ -272,9 +269,8 @@ def aya_saturation() -> list[str]:
     lines = [
         "## 4. Aya Expanse 8B saturation, both definitions, and English coverage",
         "",
-        "Section 8 previously mixed two different saturation statistics in one "
-        "parenthetical. This reports both cleanly, plus the English coverage "
-        "the prespecified gate check is actually about.",
+        "Section 8 cites two different saturation statistics. Both are reported "
+        "here, plus the English coverage the prespecified gate check refers to.",
         "",
     ]
     labels, dbs, conf, present = load_arch("yesno-aya-expanse-8b")
@@ -310,8 +306,7 @@ def aya_saturation() -> list[str]:
         "",
         f"The paper's saturation gate uses the prespecified (English-only, "
         f"within-1e-6) definition, {strict_en:.1%}; the pooled >0.999 figure "
-        f"({loose:.1%}) is a looser statistic mixed in by mistake in an earlier "
-        f"draft and should not be quoted as the gate criterion.",
+        f"({loose:.1%}) is a looser statistic and is not the gate criterion.",
         "",
     ]
     return lines
@@ -321,7 +316,7 @@ def canonical_operating_point() -> list[str]:
     """Exact canonical thresholds, test AUROC gaps, and question-clustered risk CIs.
 
     These are quoted in the paper's Section 4/5 text and in the full-data
-    appendix table, and previously existed in no results file."""
+    appendix table."""
     from xsql.metrics import auroc, risk_at_threshold
 
     langs = ["en", "de", "es", "fr", "ja", "vi", "zh"]
@@ -441,10 +436,10 @@ def worked_example(candidate_id: str = "train:0#0") -> list[str]:
 
 def main() -> None:
     lines = [
-        "# Final numbers: reproducing published statistics that existed in no script",
+        "# Final numbers: reproducing published statistics from data/",
         "",
-        "Four numbers cited in the paper that were previously computed ad hoc and "
-        "not checked into any script. Canonical protocol throughout: 163 "
+        "Statistics cited in the paper, recomputed from data/. "
+        "Canonical protocol throughout: 163 "
         f"databases shuffled with `np.random.default_rng({SEED})`, the first 81 "
         "(floor(163/2)) assigned to calibration and the remaining 82 to test; "
         "threshold = the most permissive value whose selective risk on "

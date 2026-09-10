@@ -1,44 +1,37 @@
-"""Calibration experiment: can we fix the coverage gap without touching the verifier?
+"""Calibration experiment: does post-hoc calibration close the coverage gap?
 
 Prior result (results/significance.md, scripts/05_analyze.py): raw verifier
-confidence RANKS candidates about equally well in every language (AUROC gaps
+confidence ranks candidates about equally well in every language (AUROC gaps
 <=0.027, mostly not significant), but an abstention threshold fit on English
-does NOT transfer to other languages. At matched raw threshold, realized risk
-stays near target while coverage swings across languages (see
-results/calibration.md for current values). So the verifier's scores are not on a
-comparable SCALE across languages, even though they rank fine within each one.
+does not transfer to other languages. At a matched raw threshold, realized risk
+stays near target while coverage swings across languages. The scores are not
+on a comparable scale across languages, even though they rank well within each.
 
 This script asks whether post-hoc calibration (mapping raw confidence to a
 per-language P(correct)) fixes that, and how much per-language labelled data
-it takes. We compare four Platt (logistic-regression-on-logit) calibrators of
-increasing per-language specificity:
+it takes. Four Platt (logistic-regression-on-logit) calibrators of increasing
+per-language specificity are compared:
 
-  A. English-only   - fit on English train data, applied to every language
-  B. Pooled         - one fit on all languages' train data pooled together
-  C. Per-language   - a separate fit per language (upper bound, most data)
-  D. Shared slope + per-language intercept - one slope, per-language offset
+  A. English-only:  fit on English train data, applied to every language
+  B. Pooled:        one fit on all languages' train data pooled together
+  C. Per-language:  a separate fit per language (upper bound, most data)
+  D. Shared slope + per-language intercept: one slope, per-language offset
 
-IMPORTANT STRUCTURAL POINT, verified rather than assumed: A and B each apply
-a SINGLE monotonic function of the raw score to every language alike. A
-monotonic reparametrization cannot change which candidates are accepted at a
-given realized-risk target for a FIXED language (the accept/reject ranking
-within that language is unchanged), so the coverage a language gets at its
-own optimal threshold is unaffected -- only the value of that threshold
-moves. The only way A or B can affect the operational metric here is
-indirectly, via the single shared threshold being fit on English's
-recalibrated scale and then reused unchanged for every language: that is
-mathematically equivalent to fitting some raw-score threshold on English and
-applying it elsewhere, i.e. no different from doing nothing. C and D are the
-only calibrators that can equalize coverage, because they apply a DIFFERENT
-function per language, which lets the shared threshold land at a different
-point of each language's raw-score distribution.
+A and B each apply a single monotonic function of the raw score to every
+language alike. A monotonic reparametrization does not change the accept/reject
+ranking within a language, so the coverage a language gets at its own optimal
+threshold is unaffected; only the threshold value moves. A shared threshold fit
+on English's recalibrated scale and reused for every language is equivalent to
+fitting a raw-score threshold on English and applying it elsewhere. C and D can
+equalize coverage because they apply a different function per language, which
+lets the shared threshold land at a different point of each language's
+raw-score distribution.
 
 Evaluation is on a database-disjoint held-out split (every candidate for a
-db_id sits on one side only) so no calibrator is ever tested on a schema it
-was fitted on. Reused: src/xsql/metrics.py for AUROC/Brier/ECE/threshold
-search, mirroring the bootstrap pattern of scripts/05_analyze.py (resample
-whole questions, never individual candidates, since the K candidates per
-question share a database and difficulty).
+db_id sits on one side only), so no calibrator is tested on a schema it was
+fitted on. AUROC/Brier/ECE and threshold search come from src/xsql/metrics.py;
+the bootstrap resamples whole questions, as in scripts/05_analyze.py, since the
+K candidates per question share a database and difficulty.
 
 Usage: XSQL_RUN=big uv run python scripts/08_calibration.py
 """
@@ -61,11 +54,11 @@ TARGET_RISK = 0.10
 TRAIN_FRAC = 0.5  # nominal fraction of db_ids used to fit calibrators (calibration split)
 SEED = 0
 N_BOOT = 2000
-EPS = 1e-12  # clip before logit; Qwen confidences pile up NEAR 1.0 (not exactly), and an
-# eps as coarse as 1e-6 collapses thousands of genuinely-distinct near-1 raw scores onto
-# one clipped value, shattering rank order and silently corrupting AUROC/threshold search
-# downstream. Checked empirically: with eps=1e-12 zero Qwen scores collapse; with 1e-6,
-# a large share of score pairs (across languages) get glued together.
+# Clip before logit. Qwen confidences pile up just below 1.0, and an eps as
+# coarse as 1e-6 collapses thousands of distinct near-1 scores onto one clipped
+# value, which destroys their rank order and corrupts AUROC and threshold
+# search. At 1e-12 no Qwen score collapses.
+EPS = 1e-12
 
 
 def logit(p: np.ndarray) -> np.ndarray:
@@ -100,12 +93,10 @@ def load_backend(backend: str):
 
 def split_db_ids(db_ids: np.ndarray, seed: int = SEED) -> tuple[set[str], set[str]]:
     """Canonical split: seed-0 shuffle, floor(N/2) databases to calibration
-    ("train" below), the remainder to test. Floor (not round) so that with an
-    odd N (163 databases -> 81/82) calibration is the SMALLER half -- the same
-    81 calibration / 82 test split used everywhere else in this project (e.g.
-    scripts/12_decision_analysis.py, scripts/13_transport.py). The previous
-    round()-based split gave 82/81 here, silently mismatched with the rest of
-    the codebase.
+    ("train" below), the remainder to test. Floor rather than round, so with an
+    odd N (163 databases) calibration is the smaller half, the same
+    81 calibration / 82 test split used by scripts/12_decision_analysis.py and
+    scripts/13_transport.py.
     """
     uniq = np.unique(db_ids)
     rng = np.random.default_rng(seed)
@@ -257,7 +248,7 @@ def analyze(backend: str) -> list[str]:
     for name, fn in calibrators.items():
         calib_scores[name] = {l: fn(l, x_test[l]) for l in langs}
 
-    # --- Correctness check: AUROC must be invariant under monotone calibration ---
+    # AUROC is invariant under monotone calibration; report it as a check.
     lines += ["### Correctness check: AUROC under calibration (must match raw, within float noise)", ""]
     lines += ["| calibrator | " + " | ".join(langs) + " | max |Δ| vs raw |", "|---|" + "---|" * (len(langs) + 1)]
     max_delta_overall = 0.0
@@ -276,16 +267,15 @@ def analyze(backend: str) -> list[str]:
     if max_delta_overall > 1e-6:
         lines.append(
             f"**WARNING**: AUROC moved by up to {max_delta_overall:.2e} under a supposedly "
-            "monotone calibrator -- investigate before trusting downstream numbers."
+            "monotone calibrator; investigate before trusting downstream numbers."
         )
     else:
         lines.append(
             "AUROC is unchanged (<1e-6) under every calibrator, as expected for a monotone "
-            "map -- calibration only rescales scores, it does not re-rank them."
+            "map: calibration only rescales scores, it does not re-rank them."
         )
     lines.append("")
 
-    # --- ECE / Brier per language per calibrator ---
     lines += ["### ECE / Brier on the held-out (database-disjoint) test split", ""]
     lines += [
         "| calibrator | " + " | ".join(f"{l} (ECE / Brier)" for l in langs) + " |",
@@ -299,14 +289,12 @@ def analyze(backend: str) -> list[str]:
         lines.append(f"| {name} | " + " | ".join(cells) + " |")
     lines.append("")
 
-    # --- Realized risk / coverage under a threshold fit on English, applied to all ---
-    # Calibration-split (train_mask) scores under each calibrator, used ONLY to fit
-    # the English threshold -- NEVER to evaluate it. Fitting the threshold on the
-    # same test split it is then evaluated on is leakage (it lets the threshold see
-    # the held-out English scores it will be applied to); the canonical protocol used
-    # everywhere else in this project (e.g. scripts/12_decision_analysis.py) fits
-    # every threshold on calibration-database English scores only, then evaluates on
-    # a disjoint test split.
+    # Calibration-split scores under each calibrator are used only to fit the
+    # English threshold, never to evaluate it. Fitting on the test split would
+    # let the threshold see the held-out English scores it is applied to; the
+    # protocol elsewhere in this project (scripts/12_decision_analysis.py) fits
+    # every threshold on calibration-database English scores and evaluates on
+    # the disjoint test split.
     calib_scores_cal = {"raw": {l: conf[l][train_mask] for l in langs}}
     for name, fn in calibrators.items():
         calib_scores_cal[name] = {l: fn(l, x_train[l]) for l in langs}
@@ -319,9 +307,9 @@ def analyze(backend: str) -> list[str]:
         f"### Realized risk / coverage at a {TARGET_RISK:.0%}-target threshold fit on "
         "English, applied unchanged to every language",
         "",
-        "Threshold fit per calibrator on English CALIBRATION-split scores (never on "
-        "the test split it is then evaluated on); the SAME threshold value is then "
-        "applied to every language's TEST-split scores under that SAME calibrator. "
+        "Threshold fit per calibrator on English calibration-split scores (never on "
+        "the test split it is then evaluated on); the same threshold value is then "
+        "applied to every language's test-split scores under that same calibrator. "
         "This is the deployment scenario: fit once, ship everywhere.",
         "",
     ]
@@ -357,7 +345,7 @@ def analyze(backend: str) -> list[str]:
     lines += [
         "### Coverage spread across languages (max−min coverage), the headline number",
         "",
-        f"Bootstrap over {N_BOOT} resamples of test QUESTIONS (item_idx), percentile 95% CI. "
+        f"Bootstrap over {N_BOOT} resamples of test questions (item_idx), percentile 95% CI. "
         "This is the number calibration is supposed to shrink: a well-calibrated, "
         "language-aware map should push it toward 0.",
         "",
@@ -368,7 +356,7 @@ def analyze(backend: str) -> list[str]:
         lines.append(f"| {name} | {point:.3f} | [{lo:.3f}, {hi:.3f}] |")
     lines.append("")
 
-    # --- Data-cost learning curve: how much per-language data does D vs C need? ---
+    # Data-cost learning curve: how much per-language data does D need vs C?
     lines += [
         "### Per-language data cost: calibrator D (shared slope, per-language intercept "
         "only) vs. calibrator C (full per-language slope+intercept)",
@@ -376,9 +364,9 @@ def analyze(backend: str) -> list[str]:
         f"D's shared slope is fixed at the full-training-data value ({slopes['D_shared_slope']:.4f}, "
         "already fit above from all languages pooled); only the intercept is re-estimated "
         "per language below, so D needs only 1 free parameter per language vs. C's 2. "
-        "For each language and sample size n (n train QUESTIONS from that language, all their "
-        "candidates), we refit C from scratch and refit only D's intercept, then score both on "
-        "the SAME held-out test split and report ECE, averaged over 5 seeds for n<=100. "
+        "For each language and sample size n (n train questions from that language, all their "
+        "candidates), C is refit from scratch and only D's intercept is refit; both are scored on "
+        "the same held-out test split and ECE is reported, averaged over 5 seeds for n<=100. "
         "Full-data column reuses the ECE already reported above.",
         "",
     ]
@@ -420,7 +408,7 @@ def analyze(backend: str) -> list[str]:
         f"A: 2 parameters total, fit on English only ({len(langs)}x less per-language data "
         "collection than C/D, but does not use or help other languages at all).  ",
         f"B: 2 parameters total, fit on all {len(langs)} languages pooled.  ",
-        f"C: 2 parameters PER language ({2 * len(langs)} total), each fit ONLY on that "
+        f"C: 2 parameters per language ({2 * len(langs)} total), each fit only on that "
         "language's own labelled data.  ",
         f"D: 1 shared slope + {len(langs)} intercepts ({1 + len(langs)} total); the slope "
         "pools data across all languages and only the intercept needs language-specific "
@@ -457,7 +445,7 @@ def main(backends: list[str]) -> None:
         "(qwen-7b), where most English scores sit within a hair of 1.0 and fitting a "
         "logistic map on near-ceiling logits is ill-conditioned. The learning-curve check "
         "measures ECE, not coverage: D approaches its full-data ECE with roughly 25-50 "
-        "labelled per-language questions, while C needs closer to the full budget; note that "
+        "labelled per-language questions, while C needs closer to the full budget. "
         "D's shared slope is fitted on all languages' calibration data, so the per-language "
         "count is not its total data requirement. Calibration equalizes scale; it does not "
         "guarantee the target-risk threshold transfers, and realized non-English risk under "

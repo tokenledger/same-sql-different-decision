@@ -1,20 +1,20 @@
-"""Emit the Colab notebook for the END-TO-END experiment.
+"""Emit the Colab notebook for the end-to-end experiment.
 
-Complement to build_colab_notebook.py (the PAIRED experiment): there, SQL is
+Complement to build_colab_notebook.py (the paired experiment): there, SQL is
 generated once from the English question and only the scoring language
 varies, isolating the causal effect of language on verifier confidence. Here,
-SQL is generated INDEPENDENTLY from each language's own question, executed,
+SQL is generated independently from each language's own question, executed,
 labeled, and then scored under that same language's question (the deployment
 condition). This measures the combined operational effect: language affects
 generation, language affects scoring, and calibration determines whether the
 system executes or abstains.
 
-Because the candidate SETS differ per language here (unlike the paired run,
+Because the candidate sets differ per language here (unlike the paired run,
 where the same fixed SQL is rescored under every language), cross-language
-comparisons on this output are NOT paired and must not be analyzed with the
+comparisons on this output are not paired and must not be analyzed with the
 paired bootstrap in scripts/05_analyze.py, which assumes a shared candidate
-set. Every output row carries `gen_lang` (and `condition`) so this is
-impossible to lose downstream.
+set. Every output row carries `gen_lang` and `condition` so this is visible
+downstream.
 
 Reuses the same variant, prompts, execution-match rule, and Yes/No logprob
 scoring as build_colab_notebook.py / src/xsql so the two runs stay comparable
@@ -89,14 +89,13 @@ except Exception:
 login(token)
 """
 
-CONFIG = '''# Mirrors src/xsql/config.py (see xsql_colab.ipynb, cell 2, for the paired run's
-# identical config -- SPLITS/N_QUESTIONS/MAX_PER_DB/SEED below are kept byte-for-byte
-# the same so item selection reproduces the SAME 1200 items as the paired run).
+CONFIG = '''# Mirrors src/xsql/config.py. SPLITS, N_QUESTIONS, MAX_PER_DB, and SEED are
+# identical to the paired notebook's config cell so item selection reproduces
+# the same 1200 items.
 REPO_ID  = "dreamerdeo/multispider"
 # `with_original_value` localizes literals inside questions ("JetBlue Airways" ->
-# "深圳航空公司") while leaving gold SQL in English, which breaks the design here
-# just as badly as in the paired run: a translated question would stop asking
-# what the (still-English) gold query answers.
+# "深圳航空公司") while leaving gold SQL in English, so a translated question
+# would stop asking what the gold query answers.
 VARIANT  = "with_english_value"
 
 LANGUAGES = ["en", "de", "es", "fr", "ja", "vi", "zh"]
@@ -111,23 +110,19 @@ VERIFIERS = {
 
 # Spider's dev split has only 20 databases, so a per-database cap silently
 # bounds the run (a cap of 4 yields at most 80 questions). Pull from train too:
-# 146 more databases. These four values are IDENTICAL to the paired notebook's
-# config cell -- same seed, same logic -- so this run samples the same 1200
-# items over the same 163 databases and the two studies share questions.
+# 146 more databases. These four values match the paired notebook's config
+# cell, so this run samples the same 1200 items over the same 163 databases.
 SPLITS       = ["dev", "train"]
 N_QUESTIONS  = 1200
 MAX_PER_DB   = 10      # 166 databases x 10 = 1660 ceiling, comfortably above N
 SEED         = 0
 
-# K is asymmetric by design. English is the pivot language elsewhere in this
-# project (paired run, generator's own reasoning defaults to English-shaped
-# training data) so it keeps K=5, matching the paired run's K for that one
-# language. Each OTHER language gets K=3: generating from all 7 languages
-# already multiplies total generation work by up to 7x over the paired run's
-# "generate once" design, so K=3 for the 6 non-English languages keeps total
-# compute tractable (23 candidates/item = 5 + 6*3, vs the paired run's flat 5)
-# while still giving the verifier 3 candidates/language/item to compute
-# per-language execution accuracy, AUROC, and calibration over.
+# K is asymmetric. English keeps K=5, matching the paired run's K for the pivot
+# language. Each other language gets K=3: generating from all 7 languages
+# already multiplies generation work by up to 7x over the paired run, and K=3
+# keeps total compute tractable (23 candidates/item = 5 + 6*3) while still
+# giving 3 candidates per language per item for per-language execution
+# accuracy, AUROC, and calibration.
 K_EN     = 5
 K_TARGET = 3
 
@@ -272,8 +267,8 @@ print("comparator parity check passed")
 PREPARE = '''import random
 from collections import defaultdict
 
-# IDENTICAL logic and seed to the paired notebook's item-selection cell, so
-# this run samples the SAME 1200 items over the same 163 databases.
+# Same logic and seed as the paired notebook's item-selection cell, so this
+# run samples the same 1200 items over the same 163 databases.
 rng = random.Random(SEED)
 order = list(items_all); rng.shuffle(order)
 per_db, chosen, skipped = defaultdict(int), [], 0
@@ -311,9 +306,8 @@ def extract_sql(text):
 gtok = AutoTokenizer.from_pretrained(GENERATOR_MODEL)
 gmodel = AutoModelForCausalLM.from_pretrained(GENERATOR_MODEL, dtype=torch.bfloat16, device_map="cuda").eval()
 
-# Resume support, keyed on (item_idx, gen_lang) -- generation now happens once
-# PER LANGUAGE per item (unlike the paired run, which generates once from
-# English), so that is the unit a restart must be able to skip.
+# Resume support, keyed on (item_idx, gen_lang): generation happens once per
+# language per item, so that is the unit a restart must be able to skip.
 CAND_PATH = OUT / "candidates.jsonl"
 records = [json.loads(l) for l in CAND_PATH.open()] if CAND_PATH.exists() else []
 done = {(r["item_idx"], r["gen_lang"]) for r in records}
@@ -402,12 +396,11 @@ SCHEMAS = {d: schema_ddl(d) for d in {r["db_id"] for r in records}}
 BY_IDX = {i["idx"]: i for i in chosen}
 sql_by_cid = {r["candidate_id"]: r["sql"] for r in records}
 
-# DEPLOYMENT CONDITION: unlike the paired run's 7-language fan-out, each
-# candidate here is scored under ONLY the language it was generated from
-# (gen_lang == lang always in this run's output). This is why the resulting
-# per-language numbers are NOT directly comparable to the paired run's, and
-# why cross-language comparisons within this run are unpaired (each language
-# has its own independently generated candidate set) -- see the intro markdown.
+# Deployment condition: each candidate is scored under only the language it
+# was generated from (gen_lang == lang in this run's output), unlike the paired
+# run's 7-language fan-out. Per-language numbers are therefore not directly
+# comparable to the paired run's, and cross-language comparisons within this
+# run are unpaired, since each language has its own candidate set.
 jobs = {}
 for r in records:
     q = BY_IDX[r["item_idx"]]["questions"][r["gen_lang"]]
@@ -417,13 +410,12 @@ for r in records:
 print(f"{len(records)} candidates -> {len(jobs)} unique forward passes "
       f"({100*(1 - len(jobs)/len(records)):.0f}% deduped, same-SQL-same-question)")
 
-# Batch size 1 is deliberate. Batched bf16 forward passes are not numerically
-# identical to unbatched ones -- measured on this exact workload, batching
-# perturbs confidences by up to 6e-2, the same magnitude as the effects being
-# measured. Length-sorting and explicit position_ids both made it worse; it is
-# batch-shape-dependent kernel nondeterminism, not padding. Batch 1 reproduces
-# unbatched scoring exactly (max |diff| = 0). A forward at this prompt length
-# is only tens of milliseconds, so the correctness is nearly free.
+# Batch size is 1. Batched bf16 forward passes are not numerically identical to
+# unbatched ones: on this workload, batching perturbs confidences by up to
+# 6e-2, the same magnitude as the effects being measured. Length-sorting and
+# explicit position_ids did not remove the drift, so it is batch-shape-dependent
+# kernel nondeterminism rather than padding. A forward pass at this prompt
+# length takes tens of milliseconds, so the cost is small.
 BATCH = 1
 
 def run_verifier(name, model_id):
@@ -488,21 +480,21 @@ for name, mid in VERIFIERS.items():
     run_verifier(name, mid)
 
 print()
-print("REMINDER: scores_endtoend-*.jsonl rows carry gen_lang == lang (own-language")
+print("Reminder: scores_endtoend-*.jsonl rows carry gen_lang == lang (own-language")
 print("deployment scoring) and condition=%r. Candidate sets differ per language," % CONDITION)
-print("so do NOT feed this file into scripts/05_analyze.py's paired bootstrap --")
-print("that assumes one shared candidate set scored under every language.")
+print("so this file must not be fed into scripts/05_analyze.py's paired bootstrap,")
+print("which assumes one shared candidate set scored under every language.")
 '''
 
 SAVE = '''import shutil
 shutil.make_archive("/content/xsql_endtoend_results", "zip", OUT)
 print("results:", [p.name for p in OUT.iterdir()])
 
-# Download to your machine
+# Download the archive.
 from google.colab import files
 files.download("/content/xsql_endtoend_results.zip")
 
-# Optional: also drop a copy in Drive
+# Optional: also keep a copy in Drive.
 # from google.colab import drive; drive.mount('/content/drive')
 # shutil.copy("/content/xsql_endtoend_results.zip", "/content/drive/MyDrive/xsql_endtoend_results.zip")
 '''

@@ -1,8 +1,8 @@
-"""Is the language effect a class-INDEPENDENT score offset?
+"""Is the language effect a class-independent score offset?
 
 If a language shifts correct and incorrect SQL by the same amount, the ranking
-is preserved and only the scale moves -- which is exactly the pattern that lets
-AUROC stay flat while a fixed threshold changes coverage. If instead the shift
+is preserved and only the scale moves, which is the pattern that lets AUROC
+stay flat while a fixed threshold changes coverage. If instead the shift
 differs by class, the language is also changing discrimination, and calling it
 "an offset" would be wrong.
 
@@ -16,7 +16,7 @@ For each language l and grader g, on candidate i with label y_i:
 kappa near zero supports (but does not prove) a class-independent offset. This
 is an empirical description, not a causal mechanism.
 
-Resampling is over DATABASES: candidates sharing a database share a schema and
+Resampling is over databases: candidates sharing a database share a schema and
 difficulty, and the same SQL is scored in every language, so neither judgments
 nor questions are independent units here.
 
@@ -59,8 +59,8 @@ def main() -> None:
         "`delta` is the confidence change vs. English on the *same* SQL with the",
         "*same* execution-derived label. If `kappa` (the correct-minus-incorrect",
         "difference) is near zero, the language moves the score scale without",
-        "changing discrimination -- which is what allows AUROC to stay flat while a",
-        "fixed threshold shifts coverage. Bootstrap resamples DATABASES.",
+        "changing discrimination, which is what allows AUROC to stay flat while a",
+        "fixed threshold shifts coverage. Bootstrap resamples databases.",
         "",
     ]
 
@@ -98,8 +98,8 @@ def main() -> None:
                     continue
                 ks.append(dl[ll == 1].mean() - dl[ll == 0].mean())
             lo, hi = np.percentile(ks, [2.5, 97.5])
-            # "Consistent with an offset" means the interaction is both
-            # non-significant AND small relative to the shift itself.
+            # "Consistent with an offset" means the interaction is
+            # non-significant or small relative to the shift itself.
             ns = lo <= 0 <= hi
             small = abs(kappa) < 0.5 * max(abs(dc), abs(di), 1e-9)
             verdict = "yes" if (ns or small) else "**no**"

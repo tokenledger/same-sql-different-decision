@@ -1,11 +1,11 @@
-"""Do the mitigations restore DECISIONS, or only coverage?
+"""Do the mitigations restore decisions, or only coverage?
 
 scripts/09_mitigation.py evaluates bilingual and pivot prompting by coverage
-spread -- the aggregate metric this project argues is inadequate. This applies
+spread, the aggregate metric this project argues is inadequate. This applies
 the decision-level metrics of scripts/12_decision_analysis.py to the same
 conditions, so the mitigations are judged by the standard the paper sets.
 
-Reference policy is the ENGLISH decision at the English-calibrated threshold.
+Reference policy is the English decision at the English-calibrated threshold.
 English is the calibrated reference, not ground truth; the execution-derived
 label decides whether a change is harmful.
 

@@ -1,7 +1,7 @@
 # What the language shift does to individual execution decisions
 
 One English-calibrated threshold, applied unchanged. Same SQL, same
-database, same execution-derived label -- only the question's language
+database, same execution-derived label; only the question's language
 differs, so every flip below is caused by language alone.
 
 ## Llama-3.1-8B

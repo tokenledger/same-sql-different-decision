@@ -91,8 +91,8 @@ def main(backend: str) -> None:
     y = np.array([mean_dconf[l] for l in others])
     r_lang = float(np.corrcoef(x, y)[0, 1]) if len(others) > 2 else float("nan")
 
-    # Per-candidate correlation, pooled across languages: the real test, since it
-    # uses within-language variation rather than 6 aggregate points.
+    # Per-candidate correlation, pooled across languages. This uses
+    # within-language variation rather than 6 aggregate points.
     dp, dc = [], []
     for c in cids:
         for l in others:

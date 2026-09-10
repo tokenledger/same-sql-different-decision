@@ -2,17 +2,17 @@
 
 The decision-level result says an English-calibrated threshold changes 14-27% of
 individual execution decisions. This asks whether any score transport restores
-the ENGLISH decisions -- not merely equal coverage, which rank matching already
+the English decisions, not merely equal coverage, which rank matching already
 achieves while still flipping which specific queries run.
 
-Five transports, all fitted on a database-disjoint calibration split and all
-requiring NO correctness labels in the target language:
+Five transports, all fitted on a database-disjoint calibration split and none
+requiring correctness labels in the target language:
 
   raw        English threshold applied unchanged
   offset     additive shift on the logit (match mean)            unpaired
   affine     scale + shift on the logit (match mean and sd)      unpaired
   quantile   rank matching: target quantile -> English quantile  unpaired
-  isotonic   monotone fit of target score -> its PAIRED English score
+  isotonic   monotone fit of target score -> its paired English score
 
 Only `isotonic` uses the paired structure: the same SQL scored in both
 languages. That extra requirement is only worth it if it beats the unpaired
@@ -102,11 +102,11 @@ def fit_apply(method, s_cal_lang, s_cal_en, s_test_lang):
 
 def main() -> None:
     lines = [
-        "# Cross-lingual score transport: can we recover the ENGLISH decisions?",
+        "# Cross-lingual score transport: can the English decisions be recovered?",
         "",
         "All transports fitted on a database-disjoint calibration split, none using",
         "correctness labels in the target language. `flips` is the share of identical",
-        "SQL whose execute/defer decision differs from the English decision -- the",
+        "SQL whose execute/defer decision differs from the English decision, the",
         "quantity a transport has to reduce to be worth anything. Coverage parity",
         "alone does not imply decision agreement.",
         "",

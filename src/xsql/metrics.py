@@ -60,7 +60,7 @@ def threshold_at_risk(
     Feasibility is evaluated only at distinct score values, using the same
     `scores >= threshold` rule as `risk_at_threshold`. Candidates sharing a score
     cannot be separated by any threshold, so sweeping ranks instead would report
-    a coverage the threshold cannot actually deliver.
+    a coverage the threshold cannot deliver.
     """
     best: float | None = None
     for t in np.unique(scores)[::-1]:  # most selective first

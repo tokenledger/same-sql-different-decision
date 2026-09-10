@@ -1,10 +1,10 @@
-"""Do MultiSpider's translations actually preserve the question's semantics?
+"""Do MultiSpider's translations preserve the question's semantics?
 
 The paired design claims that only the language varies. That claim rests on the
 translations being semantically parallel, which the `with_english_value` variant
 is supposed to guarantee by holding literal values fixed. It does not, entirely.
 
-Two automatable checks on content that MUST survive translation for the gold SQL
+Two automatable checks on content that must survive translation for the gold SQL
 to still answer the question:
 
   numeric values   digits appearing in the English question
@@ -13,10 +13,9 @@ to still answer the question:
 Then a sensitivity analysis: recompute the unsafe-promotion rate excluding every
 item whose literal did not survive, to test whether the defect drives results.
 
-Note on regex: do NOT use \\b word boundaries for the numeric check. Japanese and
-Chinese are written without spaces and CJK characters are word characters, so
-\\b\\d+\\b silently misses almost every number in those languages and reports a
-catastrophic-looking false failure.
+The numeric regex has no \\b word boundaries. Japanese and Chinese are written
+without spaces and CJK characters are word characters, so \\b\\d+\\b would miss
+almost every number in those languages and report a false failure.
 
 Usage: uv run python scripts/17_translation_audit.py
 """

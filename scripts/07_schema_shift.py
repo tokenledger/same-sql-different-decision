@@ -2,20 +2,20 @@
 
 05_analyze.py and the slice reports establish that an English-fitted
 abstention threshold keeps its target risk but shifts coverage when the
-QUESTION LANGUAGE changes, holding the database fixed. That is "language-only
-shift": the threshold is fit and evaluated on the same set of databases, only
-the language of the question changes.
+question language changes, holding the database fixed. That is "language-only
+shift": the threshold is fit and evaluated on the same set of databases, and
+only the language of the question changes.
 
 In deployment the more realistic failure mode is "language-plus-schema
 shift": the threshold is fit on one set of databases (English questions) and
-then applied to genuinely unseen databases, in a non-English language. This
-script partitions the 163 databases into a FIT half and a held-out TEST half
-and compares three regimes at a fixed English-fitted threshold:
+then applied to unseen databases, in a non-English language. This script
+partitions the 163 databases into a FIT half and a held-out TEST half and
+compares three regimes at a fixed English-fitted threshold:
 
-  (a) language-only shift   -- FIT databases,  other language
-  (b) language+schema shift -- TEST databases, other language
-  (c) schema-shift reference -- TEST databases, English
-                                (isolates how much of (b) is just schema shift)
+  (a) language-only shift:    FIT databases,  other language
+  (b) language+schema shift:  TEST databases, other language
+  (c) schema-shift reference: TEST databases, English
+                              (isolates how much of (b) is schema shift alone)
 
 all measured against the (FIT databases, English) baseline the threshold was
 fit on. Section 3 checks whether AUROC (ranking quality) itself degrades on
@@ -23,13 +23,13 @@ held-out databases, independent of any threshold.
 
 Bootstrap units:
   - (a) shares one population (FIT db candidates) across languages, so it is
-    resampled by QUESTION with the English/other-language comparison paired
-    (matches 05_analyze.py's approach).
-  - (b), (c), and the AUROC FIT-vs-TEST gap compare two DIFFERENT database
+    resampled by question with the English/other-language comparison paired,
+    as in 05_analyze.py.
+  - (b), (c), and the AUROC FIT-vs-TEST gap compare two different database
     populations (FIT vs TEST), so they cannot be paired by question. Each side
-    is bootstrapped independently by DATABASE (the unit of generalization
-    under schema shift) and the two draw sequences are subtracted elementwise
-    -- a standard two-sample percentile bootstrap for a difference of
+    is bootstrapped independently by database (the unit of generalization
+    under schema shift) and the two draw sequences are subtracted elementwise,
+    a standard two-sample percentile bootstrap for a difference of
     independent statistics.
 
 Usage: XSQL_RUN=big uv run python scripts/07_schema_shift.py
@@ -124,9 +124,9 @@ def bootstrap_two_sample(
 ):
     """Percentile CI for stat_a - stat_b when a and b are independent
     populations (different databases). Each side is resampled independently
-    by its own cluster (database) and the draws are paired positionally --
-    valid because both sequences are iid, so the elementwise difference has
-    the correct marginal sampling distribution of the difference.
+    by its own cluster (database) and the draws are paired positionally.
+    Both sequences are iid, so the elementwise difference has the marginal
+    sampling distribution of the difference.
     """
     draws_a = bootstrap_paired(cluster_a, mask_a, stat_a, rng, n_boot)
     draws_b = bootstrap_paired(cluster_b, mask_b, stat_b, rng, n_boot)
@@ -181,7 +181,7 @@ def analyze(backend: str) -> list[str]:
         "Baseline (fit population, English): "
         f"risk {en_fit_risk:.3f}, coverage {en_fit_cov:.3f}.",
         "",
-        "### (a) language-only shift -- FIT databases, other languages",
+        "### (a) language-only shift: FIT databases, other languages",
         "Same population the threshold was fit on; only the language changes. "
         "Paired bootstrap over questions (95% CI on the coverage gap vs FIT/English).",
         "",
@@ -210,9 +210,9 @@ def analyze(backend: str) -> list[str]:
 
     lines += [
         "",
-        "### (b) language+schema shift -- held-out databases, other languages",
+        "### (b) language+schema shift: held-out databases, other languages",
         "Threshold still fit on FIT/English; evaluated on TEST databases in each "
-        "other language. Two-sample bootstrap by DATABASE (gap vs FIT/English).",
+        "other language. Two-sample bootstrap by database (gap vs FIT/English).",
         "",
         "| lang | risk | coverage | gap vs FIT/en | 95% CI | significant |",
         "|---|---|---|---|---|---|",
@@ -238,8 +238,8 @@ def analyze(backend: str) -> list[str]:
 
     lines += [
         "",
-        "### (c) reference: schema shift alone -- held-out databases, English",
-        "Same threshold, same TEST databases, but the pivot language -- isolates "
+        "### (c) reference: schema shift alone, held-out databases, English",
+        "Same threshold, same TEST databases, but the pivot language. This isolates "
         "how much of (b) is schema shift vs added language shift. "
         "(Row is a duplicate of the `en` row in (b), repeated for readability.)",
         "",
@@ -254,13 +254,11 @@ def analyze(backend: str) -> list[str]:
         f"[{lo:+.3f}, {hi:+.3f}] {fmt_sig(lo, hi)}{flag_negligible(en_test_cov - en_fit_cov)}."
     )
 
-    # -----------------------------------------------------------------
     # Part 3: does ranking (AUROC) itself degrade on held-out databases?
-    # -----------------------------------------------------------------
     lines += [
         "",
         "### AUROC on FIT vs held-out (TEST) databases",
-        "Two-sample bootstrap by DATABASE.",
+        "Two-sample bootstrap by database.",
         "",
         "| lang | AUROC (FIT) | AUROC (TEST) | gap FIT-TEST | 95% CI | significant |",
         "|---|---|---|---|---|---|",
@@ -306,29 +304,29 @@ def main() -> None:
         "",
         "**AUROC (ranking) survives schema shift.** For both verifiers and every "
         "language, the FIT-vs-TEST AUROC gap is not significant (CIs straddle "
-        "zero) -- and for llama8b, TEST-database AUROC is actually a few points "
+        "zero), and for llama8b, TEST-database AUROC is a few points "
         "*higher* than FIT, not lower. There is no evidence the verifier ranks "
         "correct/incorrect SQL worse on unseen databases; if anything the ~80 "
         "held-out databases in this split happen to be marginally easier to "
         "rank, well within noise.",
         "",
         "**Coverage instability from language shift alone (a) mostly carries over "
-        "to language+schema shift (b), same sign, similar or larger magnitude "
-        "-- but many effects lose significance.** That loss of significance is "
+        "to language+schema shift (b), same sign, similar or larger magnitude, "
+        "but many effects lose significance.** That loss of significance is "
         "a sample-size artifact, not evidence the effect vanishes: (a) is "
         "bootstrapped over ~600 questions sharing one fixed set of databases, "
         "while (b) and (c) are bootstrapped over ~80 databases (the unit that "
-        "actually varies under schema shift), which is a much smaller "
+        "varies under schema shift), which is a much smaller "
         "effective sample. Point estimates in (b) track (a) closely for most "
         "languages (e.g. llama8b/fr: -0.107 in (a) vs -0.143 in (b); "
-        "qwen7b/de: -0.229 vs -0.242), so the underlying effect looks stable -- "
-        "the study is just underpowered to confirm it at the database level "
+        "qwen7b/de: -0.229 vs -0.242), so the underlying effect looks stable; "
+        "the study is underpowered to confirm it at the database level "
         "with only 163 databases split in half.",
         "",
         "**Schema shift alone (c), with language held at English, is small and "
         "never significant** (llama8b: -0.025 coverage; qwen7b: -0.036), "
         "confirming the coverage instability is a language-shift phenomenon, "
-        "not a schema-shift phenomenon -- schema shift mainly acts as an "
+        "not a schema-shift phenomenon. Schema shift mainly acts as an "
         "additional noise source that widens the CIs enough to swallow the "
         "language effect's significance rather than a competing effect with "
         "its own sign.",
@@ -336,8 +334,8 @@ def main() -> None:
         "**qwen7b is the more fragile verifier.** Its English threshold sits "
         "exactly at score 1.0 (the maximum, a tie-heavy region), so acceptance "
         "is an all-or-nothing gate per language and coverage swings by 15-23 "
-        "points across languages regardless of database provenance -- this "
-        "reproduces the pre-existing 36.0% (en) vs 14.1% (de) full-data result "
+        "points across languages regardless of database provenance. This "
+        "reproduces the 36.0% (en) vs 14.1% (de) full-data result "
         "reasonably closely on the FIT-only subset here (34.1% vs 11.2%). "
         "llama8b's threshold (0.836) sits in a less saturated region and shows "
         "milder, more mixed-sign coverage shifts.",
@@ -347,7 +345,7 @@ def main() -> None:
         "AUROC ranking is unaffected by schema shift. The coverage instability "
         "under language shift is real and, where measurable, does not appear "
         "to be cured or worsened in a clearly resolvable way by additionally "
-        "shifting to unseen databases -- point estimates suggest it persists "
+        "shifting to unseen databases. Point estimates suggest it persists "
         "at similar or larger magnitude, but confirming that at the database "
         "level would need more than 163 databases to reach the same power as "
         "the question-level comparisons.",

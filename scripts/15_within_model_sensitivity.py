@@ -1,11 +1,11 @@
-"""Is one verifier MORE cross-lingually sensitive than another?
+"""Is one verifier more cross-lingually sensitive than another?
 
 Raw disagreement between two verifiers conflates two things: they have different
 English policies to begin with, and they may react differently to language. A
-dense and an MoE verifier are allowed to disagree in English -- that says nothing
-about cross-lingual stability.
+dense and an MoE verifier may disagree in English, and that says nothing about
+cross-lingual stability.
 
-So measure each model against ITS OWN English decisions:
+So each model is measured against its own English decisions:
 
     I_m(lang) = P(decision_{m,lang} != decision_{m,en})
 
@@ -18,11 +18,11 @@ which cancels the English-baseline disagreement entirely.
 Two threshold regimes, because a model that accepts almost nothing trivially
 looks stable:
 
-  risk    each model's own English threshold at the 10% risk target
-  covmatch  each model's English threshold set to a COMMON English coverage,
+  risk      each model's own English threshold at the 10% risk target
+  covmatch  each model's English threshold set to a common English coverage,
             so a saturated model cannot win by abstaining
 
-CIs are a PAIRED database bootstrap: both models scored the identical candidate
+CIs are a paired database bootstrap: both models scored the identical candidate
 set, so the same databases are resampled for both at once and the difference is
 taken within each draw.
 
@@ -93,7 +93,7 @@ def main() -> None:
         "",
         "Each model is compared against **its own** English decisions, so baseline",
         "disagreement between models cancels. `dI` is the second model's instability",
-        "minus the first's: negative means the second model is LESS language-sensitive.",
+        "minus the first's: negative means the second model is less language-sensitive.",
         "",
         "Two regimes. `risk`: each model's own English threshold at the 10% risk",
         "target. `covmatch`: thresholds set to a common English coverage, so a",
@@ -124,7 +124,7 @@ def main() -> None:
             continue
 
         # Common English coverage: the smaller of the two risk-regime coverages,
-        # so both models can actually reach it.
+        # so both models can reach it.
         cov_a = float((conf_a[PIVOT][m_t] >= thr_a).mean())
         cov_b = float((conf_b[PIVOT][m_t] >= thr_b).mean())
         target_cov = min(cov_a, cov_b)

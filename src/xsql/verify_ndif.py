@@ -6,8 +6,8 @@ weights via nnsight. This buys access to models too large to run locally.
 Only the Yes/No token probabilities are pulled back rather than the full
 vocabulary distribution, which is ~180KB per call at Llama's vocab size.
 
-Note that NDIF hosts `meta-llama/Llama-3.1-8B` as a *base* model. The prompt
-below assumes an instruct-tuned chat template, so use an -Instruct deployment.
+NDIF hosts `meta-llama/Llama-3.1-8B` as a base model. The prompt below assumes
+an instruct-tuned chat template, so use an -Instruct deployment.
 """
 
 from __future__ import annotations

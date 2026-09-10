@@ -6,7 +6,7 @@ condition machine-translates that question back into English, and MT restores
 37.7% of Vietnamese's lost literals. So part of pivot's apparent benefit could be
 repairing the benchmark rather than reducing genuine verifier inconsistency.
 
-The test: recompute pivot's improvement on the LITERAL-CLEAN subset -- items
+The test: recompute pivot's improvement on the literal-clean subset, the items
 whose English literal survived the benchmark translation, where there is nothing
 for MT to repair. If the improvement holds there, it is not defect repair.
 

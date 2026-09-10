@@ -161,7 +161,7 @@ def rows_match(pred_rows: list[tuple], gold_rows: list[tuple], ordered: bool) ->
     Spider's evaluator maps returned columns onto the parsed SELECT list rather
     than comparing them positionally, so `SELECT max(x), min(x)` and
     `SELECT min(x), max(x)` are the same answer. A positional comparison marks
-    the second one wrong. We follow Spider: the prediction matches if some
+    the second one wrong. Following Spider, the prediction matches if some
     permutation of its columns equals the gold result (rows as a multiset,
     or in order when the gold query has an ORDER BY).
     """

@@ -1,6 +1,6 @@
 """Robustness of the decision-level results to the operating point and the split.
 
-Two diagnostics requested at review, both computed from saved scores only:
+Three diagnostics, all computed from saved scores only:
 
 1. Threshold sensitivity (canonical split). The English threshold is refit at
    5%, 10%, and 15% risk targets and the per-language flip rate, unsafe
@@ -167,7 +167,7 @@ def main() -> None:
             n_inc = (lab == 0).sum()
             flips = {l: float((acc[PIVOT] != acc[l]).mean()) for l in LANGS}
             unsafe = {l: float((~acc[PIVOT] & acc[l] & (lab == 0)).sum() / n_inc) for l in LANGS}
-            # quantile transport and pivot, both compared with the English decision
+            # Quantile transport and pivot, both compared with the English decision.
             q_flips, p_flips = [], []
             for l in LANGS:
                 mapped = quantile_map(conf[l][m_fit], conf[PIVOT][m_fit], conf[l][m_test])

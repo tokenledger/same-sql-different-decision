@@ -1,12 +1,12 @@
 """Does showing the verifier English alongside the native question close the gap?
 
-Four conditions on the SAME fixed candidate SQL and execution-derived labels:
+Four conditions on the same fixed candidate SQL and execution-derived labels:
   en         English question only                       (baseline, from the big run)
   native     target-language question only               (the failure mode, from the big run)
-  bilingual  native AND English together in one prompt   (needs no translator)
-  pivot      machine translation of the NATIVE question  (needs MT)
+  bilingual  native and English together in one prompt   (needs no translator)
+  pivot      machine translation of the native question  (needs MT)
 
-The headline number is COVERAGE SPREAD: the gap between the best- and
+The headline number is coverage spread: the gap between the best- and
 worst-served language at a single abstention threshold fitted on English. That
 is what fails to transfer, so it is what a mitigation has to shrink.
 

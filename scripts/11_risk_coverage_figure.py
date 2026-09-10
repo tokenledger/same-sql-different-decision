@@ -1,15 +1,14 @@
 """The paper's main figure: risk vs. coverage, per language, per grader.
 
-The thesis in one picture. Each language's risk-coverage curve traces what the
-verifier COULD achieve at any threshold; they overlap, because selection quality
-is similar everywhere. The marker on each curve is where the single
-English-calibrated threshold actually lands. Those markers sit at very different
-coverages at similar risk -- the selector still knows which SQL is safer, a raw
-English cutoff just invokes it at very different rates.
+Each language's risk-coverage curve traces what the verifier could achieve at
+any threshold; the curves overlap, because selection quality is similar
+everywhere. The marker on each curve is where the single English-calibrated
+threshold lands. Those markers sit at very different coverages at similar
+risk: the selector still knows which SQL is safer, but a raw English cutoff
+invokes it at very different rates.
 
-Curves are drawn in a recessive gray precisely because their overlap is the
-point; identity is carried by the labelled markers, which is where the
-information is.
+Curves are drawn in a recessive gray because their overlap is the point;
+identity is carried by the labelled markers.
 
 Usage: uv run python scripts/11_risk_coverage_figure.py
 """
@@ -35,8 +34,8 @@ PIVOT = "en"
 TARGET_RISK = 0.10
 SEED = 0
 
-# Okabe-Ito, validated by scripts/validate_palette.js: all six checks pass.
-# The contrast WARN is discharged by direct-labelling every marker.
+# Okabe-Ito palette. Every marker is direct-labelled, so low contrast between
+# neighbouring hues does not affect legibility.
 COLOR = {
     "en": "#333333",
     "de": "#E69F00",
@@ -79,7 +78,7 @@ def main() -> None:
         lab_t = labels[m_test]
         for lang in LANGS:
             cov, risk = risk_coverage(lab_t, conf[lang][m_test])
-            keep = cov >= 0.05  # the far-left tail is a handful of items, pure noise
+            keep = cov >= 0.05  # the far-left tail is a handful of items and is noise
             ax.plot(cov[keep], risk[keep], color=MUTED, lw=1.0, alpha=0.35, zorder=1)
 
         ax.axhline(

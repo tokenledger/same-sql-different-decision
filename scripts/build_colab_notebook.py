@@ -56,11 +56,10 @@ LANGUAGES = ["en", "de", "es", "fr", "ja", "vi", "zh"]
 PIVOT     = "en"
 
 GENERATOR_MODEL = "Qwen/Qwen2.5-Coder-7B-Instruct"
-# Two independent capable verifiers, different model families. The headline
-# effect so far (French depresses Llama's confidence on identical SQL) needs a
-# second opinion from an unrelated model to count as a finding rather than a
-# Llama quirk. Qwen2.5-1.5B is dropped: at scale its AUROC was 0.573, too close
-# to chance to support any statement about calibrated abstention.
+# Two capable verifiers from different model families, so a language effect
+# cannot be attributed to one family's quirks. Qwen2.5-1.5B is excluded: at
+# scale its AUROC was 0.573, too close to chance to support any statement
+# about calibrated abstention.
 VERIFIERS = {
     "llama8b": "meta-llama/Llama-3.1-8B-Instruct",
     "qwen7b":  "Qwen/Qwen2.5-7B-Instruct",
@@ -327,14 +326,13 @@ for r in records:
             (r["candidate_id"], r["item_idx"], r["split"], lang, r["correct"]))
 print(f"{len(records)*len(LANGUAGES)} scorings -> {len(jobs)} unique forward passes")
 
-# Batch size 1 is deliberate. Batched bf16 forward passes are not numerically
-# identical to unbatched ones -- measured on this exact workload, batching
-# perturbs confidences by up to 6e-2, which is the same magnitude as the
-# cross-language effects being measured. Length-sorting and explicit position_ids
-# both made it worse; it is batch-shape-dependent kernel nondeterminism, not
-# padding. Batch 1 reproduces the local runs exactly (max |diff| = 0).
-# A GPU forward at this prompt length is only tens of milliseconds, so the
-# correctness is nearly free.
+# Batch size is 1. Batched bf16 forward passes are not numerically identical to
+# unbatched ones: on this workload, batching perturbs confidences by up to
+# 6e-2, the same magnitude as the cross-language effects being measured.
+# Length-sorting and explicit position_ids did not remove the drift, so it is
+# batch-shape-dependent kernel nondeterminism rather than padding. Batch 1
+# reproduces the local runs exactly, and a forward pass at this prompt length
+# takes tens of milliseconds, so the cost is small.
 BATCH = 1
 
 def run_verifier(name, model_id):
@@ -385,11 +383,11 @@ SAVE = '''import shutil
 shutil.make_archive("/content/xsql_results", "zip", OUT)
 print("results:", [p.name for p in OUT.iterdir()])
 
-# Download to your machine
+# Download the archive.
 from google.colab import files
 files.download("/content/xsql_results.zip")
 
-# Optional: also drop a copy in Drive
+# Optional: also keep a copy in Drive.
 # from google.colab import drive; drive.mount('/content/drive')
 # shutil.copy("/content/xsql_results.zip", "/content/drive/MyDrive/xsql_results.zip")
 '''

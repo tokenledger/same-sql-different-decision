@@ -5,8 +5,8 @@ distinguishes a SQL-verification paper from a general evaluator-bias paper: the
 verifier's score does not rate text, it decides whether a database action runs.
 
 For one English-calibrated threshold applied unchanged to every language, on
-IDENTICAL SQL with IDENTICAL execution-derived labels, every candidate falls
-into one of four cells:
+identical SQL with identical execution-derived labels, every candidate falls
+into one of three cells:
 
     demoted    accepted in English, rejected in this language
     promoted   rejected in English, accepted in this language
@@ -14,12 +14,12 @@ into one of four cells:
 
 Split by the true label, those become the two failure modes that matter:
 
-    LOST AUTOMATION   correct SQL demoted  -- work needlessly sent to a human
-    UNSAFE EXECUTION  incorrect SQL promoted -- a wrong query now runs
+    lost automation   correct SQL demoted: work needlessly sent to a human
+    unsafe execution  incorrect SQL promoted: a wrong query now runs
 
 Zhou et al. (2607.14480) report the unsafe direction for general evaluators in
-lower-resource languages. Reporting both directions here is what lets us say
-which failure this application actually suffers.
+lower-resource languages. Reporting both directions shows which failure this
+application suffers.
 
 Usage: uv run python scripts/12_decision_analysis.py
 """
@@ -69,7 +69,7 @@ def main() -> None:
         "# What the language shift does to individual execution decisions",
         "",
         "One English-calibrated threshold, applied unchanged. Same SQL, same",
-        "database, same execution-derived label -- only the question's language",
+        "database, same execution-derived label; only the question's language",
         "differs, so every flip below is caused by language alone.",
         "",
     ]
@@ -112,8 +112,8 @@ def main() -> None:
 
             # Question-cluster bootstrap: the five candidates from one question
             # share a database and difficulty, so candidate-level exact-binomial
-            # intervals understate the width. Clopper-Pearson is retained ONLY
-            # for zero-event cells, where every resample also contains zero and a
+            # intervals understate the width. Clopper-Pearson is used only for
+            # zero-event cells, where every resample also contains zero and a
             # percentile interval collapses to [0, 0]; there it is reported as a
             # candidate-level descriptive bound, not a clustered population bound.
             if promoted_incorr == 0:
@@ -131,8 +131,8 @@ def main() -> None:
                 lo_b, hi_b = np.percentile(vals, [2.5, 97.5])
                 ci = f"[{lo_b:.1%}, {hi_b:.1%}]"
 
-            # Conditional form: of the incorrect queries English actually withheld,
-            # what share does this language execute? Larger denominator-adjusted rate.
+            # Conditional form: the share of incorrect queries withheld in English
+            # that this language executes.
             den_cond = (acc[PIVOT] == False).__and__(lab == 0).sum()
             cond = promoted_incorr / den_cond if den_cond else float("nan")
 
@@ -145,8 +145,8 @@ def main() -> None:
 
         # Full transition decomposition. Lost-automation and unsafe-promotion
         # rates have different denominators, so quoting them alone does not show
-        # that they cancel. The accepted-error and accepted-correct deltas below
-        # are what actually explain why aggregate selective risk barely moves.
+        # whether they cancel. The accepted-error and accepted-correct deltas
+        # explain why aggregate selective risk barely moves.
         lines += [
             "",
             "**Transition decomposition.** Counts of held-out candidates by true label and",
