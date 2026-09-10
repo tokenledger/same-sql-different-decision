@@ -106,27 +106,30 @@ def _columns(rows: list[tuple], width: int) -> list[tuple]:
     return [tuple(r[i] for r in rows) for i in range(width)]
 
 
-def _wide_match(pred_rows: list[tuple], gold_rows: list[tuple], ordered: bool) -> bool:
-    """Exact column-permutation match for wide results.
+def _column_key(col: tuple, ordered: bool) -> tuple:
+    """Column contents as a sequence (ordered) or a sorted multiset (unordered)."""
+    return col if ordered else tuple(sorted(col, key=_sort_key))
 
-    Match each gold column to a distinct predicted column with identical
-    contents, then check the matched permutation. Column contents are
-    compared as sequences when `ordered`, otherwise the row multiset is
-    checked after the columns are aligned. Uses backtracking over columns
-    with equal content, which is tiny in practice."""
-    pred_cols = _columns(pred_rows, width := len(gold_rows[0]))
-    gold_cols = _columns(gold_rows, width)
-    # Candidate predicted columns for each gold column.
+
+def _wide_match(pred_rows: list[tuple], gold_rows: list[tuple], ordered: bool) -> bool:
+    """Exact column-permutation match for wide results without factorial blowup.
+
+    Cells are normalized first (same as the narrow path). Each gold column is
+    matched to a distinct predicted column with the same contents, compared
+    as a sequence when row order matters and as a multiset otherwise. Because
+    a column-wise match is necessary but not sufficient (rows could be
+    recombined across columns), every candidate assignment is verified with
+    the whole-row comparison."""
+    width = len(gold_rows[0])
+    pred_norm = [tuple(_normalize_cell(c) for c in r) for r in pred_rows]
+    gold_norm_rows = [tuple(_normalize_cell(c) for c in r) for r in gold_rows]
+    pred_cols = [_column_key(c, ordered) for c in _columns(pred_norm, width)]
+    gold_cols = [_column_key(c, ordered) for c in _columns(gold_norm_rows, width)]
     cands = [[j for j, pc in enumerate(pred_cols) if pc == gc] for gc in gold_cols]
-    if ordered:
-        # Column contents already respect row order; any injective assignment works.
-        return _assign(cands, width, [None] * width) is not None
-    gold_norm = _normalize_rows(gold_rows, ordered=False)
-    # Under multiset comparison a column-wise match is necessary but not
-    # sufficient (rows could be recombined), so verify each assignment.
+    gold_norm = _normalize_rows(gold_rows, ordered)
     for perm in _assignments(cands, width):
         permuted = [tuple(r[i] for i in perm) for r in pred_rows]
-        if _normalize_rows(permuted, ordered=False) == gold_norm:
+        if _normalize_rows(permuted, ordered) == gold_norm:
             return True
     return False
 
@@ -150,10 +153,6 @@ def _assignments(cands: list[list[int]], width: int):
             used.discard(j)
 
     yield from rec(0)
-
-
-def _assign(cands, width, _unused):
-    return next(_assignments(cands, width), None)
 
 
 def rows_match(pred_rows: list[tuple], gold_rows: list[tuple], ordered: bool) -> bool:
