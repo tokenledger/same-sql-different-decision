@@ -491,9 +491,11 @@ def run_verifier(name, model_id, label_scheme, precision="bf16"):
     return out
 '''
 
-GATE_CHECK = '''# Printed after every NEW model/condition (item 1 rescoring included, though
-# item 1's models already passed this gate at full scale in the big run --
-# printing it here is a cheap consistency check, not a new decision point).
+GATE_CHECK = '''# Printed after every NEW model/condition. This gate governs expansion beyond
+# the two primary verifiers only; it was not applied to them. Note that the
+# primary Qwen2.5-7B verifier would NOT pass the saturation check (60.8% of
+# its full-corpus English scores lie within 1e-6 of an endpoint), so the gate
+# is a screen for additional models, not a criterion the primary results meet.
 # A model is a scale-up CANDIDATE only if ALL FOUR checks pass.
 from sklearn.metrics import roc_auc_score
 import numpy as np
