@@ -35,13 +35,21 @@ def risk_coverage(labels: np.ndarray, scores: np.ndarray) -> tuple[np.ndarray, n
     """Selective risk as a function of coverage, accepting highest scores first.
 
     Returns (coverage, risk) where risk is the error rate among accepted items.
+    Points are emitted only at the end of each group of tied scores, so every
+    (coverage, risk) pair is attainable by some `score >= threshold` policy.
+    Within a tie group a threshold cannot split the candidates, so ranking
+    them individually would report coverages no threshold can reach and
+    risks that depend on tie order.
     """
-    order = np.argsort(-scores)
+    order = np.argsort(-scores, kind="stable")
     accepted = labels[order]
+    sorted_scores = scores[order]
     n = len(accepted)
     errors = np.cumsum(1 - accepted)
     counts = np.arange(1, n + 1)
-    return counts / n, errors / counts
+    # Last index of each distinct score value in descending order.
+    last_in_group = np.r_[sorted_scores[1:] != sorted_scores[:-1], True]
+    return counts[last_in_group] / n, errors[last_in_group] / counts[last_in_group]
 
 
 def threshold_at_risk(
