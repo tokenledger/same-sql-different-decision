@@ -79,3 +79,18 @@ Threshold fit on calibration-split English at the 10% target (canonical split), 
 | vi | 0.7057 | +0.0483 | 0.087 [0.059, 0.118] | 0.462 | 0.093 [0.075, 0.111] | 0.560 |
 | zh | 0.7174 | +0.0366 | 0.089 [0.065, 0.116] | 0.564 | 0.098 [0.081, 0.116] | 0.627 |
 
+## 6. Worked example (appendix)
+
+Candidate `train:0#0` on `department_management`.
+
+- English question: How many heads of the departments are older than 56 ?
+- Vietnamese question: Có bao nhiêu bộ trưởng có tuổi lớn hơn 56 ?
+- Gold SQL: `SELECT count(*) FROM head WHERE age  >  56` -> [(5,)]
+- Candidate SQL: `SELECT COUNT(*) FROM management m JOIN head h ON m.head_id = h.head_id WHERE h.age > 56` -> [(3,)]
+- Label: incorrect
+
+| verifier | threshold | en | de | es | fr | ja | vi | zh |
+|---|---|---|---|---|---|---|---|---|
+| Llama-3.1-8B | 0.7549131 | 0.4688033 defer | 0.8519555 execute | 0.7549244 execute | 0.5926719 defer | 0.7773029 execute | 0.8175766 execute | 0.4688118 defer |
+| Qwen2.5-7B | 0.9999971 | 0.9959299 defer | 0.9996647 defer | 0.9933072 defer | 0.2689420 defer | 0.9999994 execute | 0.9999039 defer | 0.8175759 defer |
+

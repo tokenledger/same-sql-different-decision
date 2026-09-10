@@ -387,6 +387,58 @@ def canonical_operating_point() -> list[str]:
     return lines
 
 
+def worked_example(candidate_id: str = "train:0#0") -> list[str]:
+    """Appendix worked example: execution counts, paired scores, and decisions
+    for one test-split candidate under the canonical thresholds."""
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    from xsql.execute import execute
+
+    items = {json.loads(l)["idx"]: json.loads(l) for l in (BIG / "items.jsonl").open()}
+    cand = next(
+        json.loads(l) for l in (BIG / "candidates.jsonl").open()
+        if json.loads(l)["candidate_id"] == candidate_id
+    )
+    it = items[cand["item_idx"]]
+    gold_rows = execute(it["db_id"], it["gold_sql"]).rows
+    cand_rows = execute(it["db_id"], cand["sql"]).rows
+    lines = [
+        "## 6. Worked example (appendix)",
+        "",
+        f"Candidate `{candidate_id}` on `{it['db_id']}`.",
+        "",
+        f"- English question: {it['questions']['en']}",
+        f"- Vietnamese question: {it['questions']['vi']}",
+        f"- Gold SQL: `{it['gold_sql']}` -> {gold_rows}",
+        f"- Candidate SQL: `{cand['sql']}` -> {cand_rows}",
+        f"- Label: {'correct' if cand['correct'] else 'incorrect'}",
+        "",
+        "| verifier | threshold | " + " | ".join(["en", "de", "es", "fr", "ja", "vi", "zh"]) + " |",
+        "|---|---|" + "---|" * 7,
+    ]
+    for stem, pretty in [("big-llama8b", "Llama-3.1-8B"), ("big-qwen7b", "Qwen2.5-7B")]:
+        rows = [json.loads(l) for l in (BIG / f"scores_{stem}.jsonl").open()]
+        by = defaultdict(dict)
+        for r in rows:
+            by[r["lang"]][r["candidate_id"]] = r
+        ids = sorted(by["en"])
+        labels = np.array([by["en"][c]["correct"] for c in ids], dtype=float)
+        dbs = np.array([by["en"][c]["db_id"] for c in ids])
+        cal, _ = canonical_split(dbs)
+        m = np.array([d in cal for d in dbs])
+        conf_en = np.array([by["en"][c]["confidence"] for c in ids])
+        thr = threshold_at_risk(labels[m], conf_en[m], TARGET_RISK)
+        cells = []
+        for l in ["en", "de", "es", "fr", "ja", "vi", "zh"]:
+            sc = by[l][candidate_id]["confidence"]
+            cells.append(f"{sc:.7f} {'execute' if sc >= thr else 'defer'}")
+        lines.append(f"| {pretty} | {thr:.7f} | " + " | ".join(cells) + " |")
+    lines.append("")
+    return lines
+
+
 def main() -> None:
     lines = [
         "# Final numbers: reproducing published statistics that existed in no script",
@@ -406,6 +458,7 @@ def main() -> None:
     lines += cross_model_flips()
     lines += aya_saturation()
     lines += canonical_operating_point()
+    lines += worked_example()
 
     text = "\n".join(lines) + "\n"
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
