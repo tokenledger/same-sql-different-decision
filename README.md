@@ -94,7 +94,7 @@ appendix Tables 7 to 23).
 | Table 16 (offset decomposition) | `10_offset_decomposition.py` | `offset_decomposition.md` |
 | Tables 17, 18, 19 (translation audit, perplexity, schema shift) | `17_translation_audit.py`, `06_perplexity.py`, `07_schema_shift.py` | `translation_audit.md`, `perplexity_big-llama8b.md`, `schema_shift.md` |
 | Tables 20, 21 (risk targets, repeated splits) | `21_robustness.py` | `robustness.md` |
-| Table 22 (worked example, `train:0#0`) | not backed by a script; values are read from the score files | |
+| Table 22 (worked example, `train:0#0`) | `19_final_numbers.py` (section 6; re-executes the two queries against the SQLite database) | `results/final_numbers.md` |
 | Table 23 (architecture screening) | `14_architecture.py`, `15_within_model_sensitivity.py` | `architecture.md`, `within_model_sensitivity.md` |
 | Pivot vs quantile paired bootstrap, quantile-rule spread over ten splits, cross-model English flips (bf16 vs 4-bit, dense vs MoE), Aya saturation, canonical thresholds, AUROC gaps, and risk intervals | `19_final_numbers.py` | `final_numbers.md` |
 
@@ -206,6 +206,14 @@ The MultiSpider questions and the Spider SQLite databases are fetched
 automatically from the HuggingFace dataset `dreamerdeo/multispider` on first
 use (`xsql.config.data_root`), so the relabeling step and the pilot scripts need
 network access once. The analysis scripts read only `data/` and `results/`.
+
+Two scripts need the Spider SQLite databases as well as the saved scores:
+`scripts/20_relabel_column_order.py` re-executes every candidate and gold query,
+and section 6 of `scripts/19_final_numbers.py` re-executes the worked example.
+Both use Python's built-in `sqlite3` module against the databases fetched
+above (about 170 database directories under the MultiSpider snapshot), read-only
+with a 30-second statement timeout. No other analysis script touches the
+databases; everything else reads only the JSONL score files.
 
 `src/xsql/config.py` still carries the pilot defaults (`XSQL_RUN=slice`, three
 languages, 20 questions); the notebooks set the study-scale values themselves.
