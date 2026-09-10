@@ -130,6 +130,30 @@ print(len(items_all), "parallel items across",
       dict(collections.Counter(i["split"] for i in items_all)))
 '''
 
+
+# The execution comparator is copied verbatim from the repository module at
+# build time so the notebook and the analysis code use one implementation.
+import inspect
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from xsql import execute as _xsql_execute  # noqa: E402
+
+COMPARATOR_SOURCE = "\n\n".join(
+    [
+        "from itertools import permutations",
+        f"MAX_PERMUTED_COLUMNS = {_xsql_execute.MAX_PERMUTED_COLUMNS}",
+    ]
+    + [
+        inspect.getsource(getattr(_xsql_execute, name))
+        for name in [
+            "_normalize_cell", "_sort_key", "_normalize_rows", "has_order_by",
+            "_column_permutations", "_columns", "_column_key", "_wide_match",
+            "_assignments", "rows_match",
+        ]
+    ]
+)
+
 EXECUTE = '''TIMEOUT = 30.0
 
 def execute(db_id, sql, timeout=TIMEOUT):
@@ -151,24 +175,35 @@ def execute(db_id, sql, timeout=TIMEOUT):
     finally:
         if conn is not None: conn.close()
 
-def _cell(v):
-    if isinstance(v, float): return round(v, 6)
-    if isinstance(v, bool):  return int(v)
-    if isinstance(v, bytes): return v.decode("utf-8", errors="replace")
-    return v
-
-def _norm(rows, ordered):
-    n = [tuple(_cell(c) for c in r) for r in rows]
-    return n if ordered else sorted(n, key=lambda r: tuple(str(c) for c in r))
+''' + COMPARATOR_SOURCE + '''
 
 def result_match(db_id, pred_sql, gold_sql):
-    """Row order enforced only when gold has ORDER BY (Spider convention)."""
+    """Execution match with the same comparator as src/xsql/execute.py.
+
+    Row order is enforced only when gold has ORDER BY; column order is never
+    enforced (Spider convention). The comparator source above is copied from
+    the repository module at notebook-build time, so the two cannot drift."""
     ok, prows, err = execute(db_id, pred_sql)
     if not ok: return False, ("timeout" if err == "timeout" else "error")
     gok, grows, gerr = execute(db_id, gold_sql)
     if not gok: return False, "gold_bad"
-    ordered = re.search(r"\\border\\s+by\\b", gold_sql, re.I) is not None
-    return _norm(prows, ordered) == _norm(grows, ordered), "ok"
+    return rows_match(prows, grows, has_order_by(gold_sql)), "ok"
+'''
+
+COMPARATOR_CHECK = '''# Parity check: the comparator must accept reordered columns, reordered rows
+# (when gold has no ORDER BY), duplicate rows, and float noise, and must
+# reject recombined rows and row-order changes when ORDER BY is present.
+_g = [(1, 2.0, "a"), (3, 4.0, "b"), (3, 4.0, "b")]
+assert rows_match([(2.0, 1, "a"), (4.0, 3, "b"), (4.0, 3, "b")], _g, False)   # columns reordered
+assert rows_match(list(reversed(_g)), _g, False)                               # rows reordered
+assert not rows_match(list(reversed(_g)), _g, True)                            # ...but not under ORDER BY
+assert not rows_match(_g[:2], _g, False)                                       # duplicate count matters
+assert rows_match([(1, 2.0000001, "a"), (3, 4.0, "b"), (3, 4.0, "b")], _g, False)  # float noise
+assert not rows_match([(1, 4.0, "a"), (3, 2.0, "b"), (3, 4.0, "b")], _g, False)    # recombined rows
+_w = [tuple(range(7)), tuple(range(10, 17))]
+assert rows_match([tuple(reversed(r)) for r in reversed(_w)], _w, False)       # wide result path
+assert has_order_by("SELECT a FROM t ORDER BY a") and not has_order_by("SELECT a FROM t")
+print("comparator parity check passed")
 '''
 
 PREPARE = '''import random
@@ -380,6 +415,7 @@ def main() -> None:
         cell("code", DATA),
         cell("markdown", "## 4. Execution harness"),
         cell("code", EXECUTE),
+        cell("code", COMPARATOR_CHECK),
         cell("markdown", "## 5. Sample items with executable gold SQL"),
         cell("code", PREPARE),
         cell("markdown", "## 6. Generate candidates (English only) + label by execution"),
